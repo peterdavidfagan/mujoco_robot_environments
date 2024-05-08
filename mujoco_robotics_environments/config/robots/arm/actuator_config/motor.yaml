@@ -1,0 +1,13 @@
+type: "motor"
+high_torque_motor:
+  ctrlrange: '-87 87'
+low_torque_motor:
+  ctrlrange: '-12 12'
+joint_actuator_mapping:
+  joint1: "high_torque_motor"
+  joint2: "high_torque_motor"
+  joint3: "high_torque_motor"
+  joint4: "high_torque_motor"
+  joint5: "low_torque_motor"
+  joint6: "low_torque_motor"
+  joint7: "low_torque_motor"

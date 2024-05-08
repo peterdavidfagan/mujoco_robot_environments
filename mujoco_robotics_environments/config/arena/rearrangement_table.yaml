@@ -1,0 +1,3 @@
+defaults:
+  - cameras: transporter_data_collection
+  - props: default

@@ -1,0 +1,40 @@
+{
+  "name": "mujoco_robotics_environments",
+  "image": "ghcr.io/peterdavidfagan/mujoco_robotics_environments:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/sshd:1": {
+        "version": "latest"
+    }
+  },
+  "customizations": {
+      "codespaces": {
+        "repositories": {
+          "peterdavidfagan/mujoco_menagerie": {
+            "permissions": "write-all"
+          },
+          "peterdavidfagan/ros2_robotics_research_toolkit":{
+            "permissions": "write-all"
+          },
+          "peterdavidfagan/transporter_networks": {
+            "permissions": "write-all"
+	  },
+          "peterdavidfagan/mujoco_controllers": {
+            "permissions": "write-all"
+          },
+          "ipab-rad/ebm_predicates": {
+            "permissions": "write-all"
+          },
+          "ipab-rad/refexp_parser": {
+            "permissions": "write-all"
+          },
+          "ipab-rad/grounding_predicates": {
+            "permissions": "write-all"
+          }
+        }
+      }
+    },
+   "updateContentCommand": "git config --global url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf ssh://git@github.com/ && git config --global url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf git@github.com/ && git config --global url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf git@github.com: && git submodule update --init --recursive"
+}

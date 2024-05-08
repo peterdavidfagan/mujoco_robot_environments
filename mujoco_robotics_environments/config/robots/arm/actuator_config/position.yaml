@@ -1,0 +1,66 @@
+type: "general"
+default:
+  dyntype: "none"
+  biastype: "affine"
+  ctrlrange: "-2.8973 2.8973"
+  forcerange: "-87 87"
+  gainprm: "4500"
+  biasprm: "0 -4500 -450"
+joint1:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: ${robots.arm.actuator_config.default.ctrlrange}
+  forcerange: ${robots.arm.actuator_config.default.forcerange}
+  gainprm: ${robots.arm.actuator_config.default.gainprm}
+  biasprm: ${robots.arm.actuator_config.default.biasprm}
+joint2:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: "-1.7628 1.7628"
+  forcerange: ${robots.arm.actuator_config.default.forcerange}
+  gainprm: ${robots.arm.actuator_config.default.gainprm}
+  biasprm: ${robots.arm.actuator_config.default.biasprm}
+joint3:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: ${robots.arm.actuator_config.default.ctrlrange}
+  forcerange: ${robots.arm.actuator_config.default.forcerange}
+  gainprm: "3500"
+  biasprm: "0 -3500 -350"
+joint4:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: "-3.0718 -0.0698"
+  forcerange: ${robots.arm.actuator_config.default.forcerange}
+  gainprm: "3500"
+  biasprm: "0 -3500 -350"
+joint5:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: ${robots.arm.actuator_config.default.ctrlrange}
+  forcerange: "-12 12"
+  gainprm: "2000"
+  biasprm: "0 -2000 -200"
+joint6:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: "-0.0175 3.7525"
+  forcerange: "-12 12"
+  gainprm: "2000"
+  biasprm: "0 -2000 -200"
+joint7:
+  dyntype: ${robots.arm.actuator_config.default.dyntype}
+  biastype: ${robots.arm.actuator_config.default.biastype}
+  ctrlrange: ${robots.arm.actuator_config.default.ctrlrange}
+  forcerange: "-12 12"
+  gainprm: "2000"
+  biasprm: "0 -2000 -200"
+
+joint_actuator_mapping:
+  joint1: "joint1"
+  joint2: "joint2"
+  joint3: "joint3"
+  joint4: "joint4"
+  joint5: "joint5"
+  joint6: "joint6"
+  joint7: "joint7"

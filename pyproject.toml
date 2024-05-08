@@ -1,0 +1,64 @@
+[project]
+name = "mujoco_robotics_environments"
+version = "0.0.0"
+description = "Simulation environments for basic manipulation tasks."
+authors = [
+	{ name = "Peter David Fagan", email = "peterdavidfagan@gmail.com" }
+]
+readme = "README.md"
+
+[tool.poetry]
+name = "mujoco_robotics_environments"
+version = "0.0.0"
+description = "Simulation environments for basic manipulation tasks."
+license = "Apache-2.0"
+authors = [
+	"Peter David Fagan <peterdavidfagan@gmail.com>"
+]
+readme = "README.md"
+classifiers = [
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux"
+]
+
+[tool.setuptools]
+py-modules=["mujoco_robotics_environments"]
+
+[tool.poetry.dependencies]
+python = "3.10.6"
+numpy = "^1.16.0"
+mujoco = "3.1.1"
+dm-control = "1.0.16"
+pillow = "10.0.0"
+matplotlib = "^3.7.2"
+hydra-core = "^1.3.2"
+pytest = "^7.0.0"
+lark = "^1.1.7"
+notebook = "^7.0.6"
+ipywidgets = "^8.1.1"
+jupyterlab = "^4.0.9"
+evosax = {version="^0.1.5", optional=true}
+inflect = "^7.0.0"
+wandb = "^0.16.1"
+
+# linux only deps
+dm-reverb = {version="0.13.0", markers = "sys_platform == 'linux'"}
+tensorflow-cpu = {version="^2.14.0", markers = "sys_platform == 'linux'"}
+envlogger = {extras = ["tfds"], version = "^1.2"}
+rlds = {version="^0.1.7", markers = "sys_platform == 'linux'"}
+
+# submodule deps
+mujoco_controllers = {path="./mujoco_robotics_environments/mujoco_pkgs/mujoco_controllers", develop=true}
+huggingface-hub = "^0.23.0"
+
+[tool.poetry.extras]
+control_tuning = [
+	"evojax", 
+	"evosax"
+]
+
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120

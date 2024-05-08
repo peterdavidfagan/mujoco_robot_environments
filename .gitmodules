@@ -1,0 +1,12 @@
+[submodule "mujoco_robotics_environments/mujoco_pkgs/mujoco_controllers"]
+	path = mujoco_robotics_environments/mujoco_pkgs/mujoco_controllers
+	url = git@github.com:peterdavidfagan/mujoco_controllers.git
+[submodule "mujoco_robotics_environments/mujoco_pkgs/mujoco_menagerie"]
+	path = mujoco_robotics_environments/mujoco_pkgs/mujoco_menagerie
+	url = git@github.com:peterdavidfagan/mujoco_menagerie.git
+[submodule "mujoco_robotics_environments/mujoco_pkgs/mujoco_controllers"]
+	path = mujoco_robotics_environments/mujoco_pkgs/mujoco_controllers
+	url = git@github.com:peterdavidfagan/mujoco_controllers.git
+[submodule "mujoco_robotics_environments/mujoco_pkgs/mujoco_menagerie"]
+	path = mujoco_robotics_environments/mujoco_pkgs/mujoco_menagerie
+	url = git@github.com:peterdavidfagan/mujoco_menagerie.git

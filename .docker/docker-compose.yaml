@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  mujoco:
+    image: ghcr.io/peterdavidfagan/mujoco_robotics_environments:latest
+    build:
+      context: ../
+      dockerfile: .docker/Dockerfile
+    privileged: true
+    network_mode: "host"
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=${DOCKER_XAUTH}
+    volumes:
+      - /tmp/.X11-unix:/tml/.X11-unix:rw
+      - ${DOCKER_XAUTH}:${DOCKER_XAUTH}
+    command: python mjenv.py 

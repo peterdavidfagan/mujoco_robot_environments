@@ -1,0 +1,3 @@
+defaults:
+  - arm: franka_emika_panda
+  - end_effector: robotiq_2f85

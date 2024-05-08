@@ -1,0 +1,31 @@
+type: "jointpos"
+pos_joint1:
+  name: pos_joint1 
+  joint: joint1
+pos_joint2:
+  name: pos_joint2
+  joint: joint2
+pos_joint3:
+  name: pos_joint3
+  joint: joint3
+pos_joint4:
+  name: pos_joint4
+  joint: joint4
+pos_joint5:
+  name: pos_joint5
+  joint: joint5
+pos_joint6:
+  name: pos_joint6
+  joint: joint6
+pos_joint7:
+  name: pos_joint7
+  joint: joint7
+
+joint_sensor_mapping:
+  pos_joint1: "joint1"
+  pos_joint2: "joint2"
+  pos_joint3: "joint3"
+  pos_joint4: "joint4"
+  pos_joint5: "joint5"
+  pos_joint6: "joint6"
+  pos_joint7: "joint7"

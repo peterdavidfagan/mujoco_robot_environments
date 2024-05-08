@@ -1,0 +1,4 @@
+controller:
+  _target_: mujoco_controllers.min_max.MinMax
+  min_val: 0.0
+  max_val: 255.0

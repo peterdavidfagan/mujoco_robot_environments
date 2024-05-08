@@ -1,0 +1,28 @@
+controller_params:
+  name: osc
+  physics_dt: ${physics_dt}
+  control_dt: ${control_dt}
+  gains:
+    position:
+      kp: 250.0
+      kd: 30.0
+    orientation:
+      kp: 500.0
+      kd: 100.0
+    nullspace:
+      kp: 200.0
+      kd: 30.0
+
+  nullspace:
+    # TODO: calculate from manipulability measure instead of default value
+    joint_config: [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
+
+  convergence:
+    position_threshold: 5e-3
+    orientation_threshold: 68e-3
+
+controller:
+  _target_: mujoco_controllers.osc.OSC
+  _partial_: true
+  controller_config: ${robots.arm.controller_config.controller_params}
+

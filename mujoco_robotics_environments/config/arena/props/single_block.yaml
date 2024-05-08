@@ -1,0 +1,21 @@
+min_objects: 1
+max_objects: 1
+min_object_size: 0.02
+max_object_size: 0.025
+sample_size: true
+sample_colour: true
+color_noise: 0.1
+shapes:
+  - cube
+colours:
+  - red
+  - green
+  - blue
+  - yellow
+  - magenta
+  - cyan
+  - grey
+textures:
+  - plain
+  - stary
+  - dotted
