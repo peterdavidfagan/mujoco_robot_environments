@@ -1,6 +1,7 @@
 """Generating data for the transporter network."""
 
 import os
+import subprocess
 from absl import logging
 import time
 
@@ -134,4 +135,7 @@ if __name__=="__main__":
                     print("Task demonstration failed with exception: {}".format(e))
                     continue
             env.close()
+    
+    # upload data to huggingface
+    subprocess.call(['python', './hf_scripts/hf_data_upload.py', '+config=transporter'])
 

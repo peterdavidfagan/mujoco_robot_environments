@@ -53,11 +53,11 @@ class PropPlacer(composer.Initializer):
                ignore_collisions=False,
                max_qvel_tol=_SETTLE_QVEL_TOL,
                max_qacc_tol=_SETTLE_QACC_TOL,
-               max_attempts_per_prop=100,
+               max_attempts_per_prop=1000,
                settle_physics=True,
-               min_settle_physics_time=0.,
+               min_settle_physics_time=0.3,
                max_settle_physics_time=2.,
-               max_settle_physics_attempts=1,
+               max_settle_physics_attempts=10,
                raise_exception_on_settle_failure=False):
     """Initializes this PropPlacer.
 
@@ -135,7 +135,7 @@ class PropPlacer(composer.Initializer):
         continue
 
       # Ignore contacts with positive distances (i.e. not actually touching).
-      if contact.dist <= 0.125 and (contact.geom1 in prop_geom_ids or
+      if contact.dist <= 0.6 and (contact.geom1 in prop_geom_ids or
                                 contact.geom2 in prop_geom_ids):
         return True
 

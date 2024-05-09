@@ -54,22 +54,7 @@ class RearrangementEnv(dm_env.Environment):
 
         # create arena
         self._arena = empty.Arena()
-        table = Rectangle(
-        name="table",
-        x_len=0.9,
-        y_len=1.0,
-        z_len=0.2,
-        rgba=(0.5, 0.5, 0.5, 1.0),
-        margin=0.0,
-        gap=0.0,
-        )
-        table_attach_site = self._arena.mjcf_model.worldbody.add(
-            "site",
-            name="table_center",
-            pos=(0.4, 0.0, 0.2),
-        )
-        self._arena.attach(table, table_attach_site)
-        
+
         # set general physics parameters
         self._arena.mjcf_model.option.timestep = cfg.physics_dt
         self._arena.mjcf_model.option.gravity = cfg.gravity
@@ -78,6 +63,44 @@ class RearrangementEnv(dm_env.Environment):
         self._arena.mjcf_model.visual.__getattr__("global").offheight = cfg.offheight
         self._arena.mjcf_model.visual.__getattr__("global").offwidth = cfg.offwidth
         self._arena.mjcf_model.visual.map.znear = cfg.znear
+
+        # add table for manipulation task
+        table = Rectangle(
+        name="table",
+        x_len=0.9,
+        y_len=1.0,
+        z_len=0.2,
+        rgba=(0.5, 0.5, 0.5, 1.0),
+        margin=0.0,
+        gap=0.0,
+        mass=10,
+        )
+        table_attach_site = self._arena.mjcf_model.worldbody.add(
+            "site",
+            name="table_center",
+            pos=(0.4, 0.0, 0.2),
+        )
+        self._arena.attach(table, table_attach_site)
+
+        # add target locations
+        top_left = [0.7, 0.4, 0.4]
+        bottom_left = [0.25, 0.4, 0.4]
+        top_right = [0.7, -0.4, 0.4]
+        bottom_right = [0.25, -0.4, 0.4]
+        front = [0.7, 0.0, 0.4]
+        locations = [top_left, bottom_left, top_right, bottom_right, front]
+
+        for idx, location in enumerate(locations):
+            self._arena.mjcf_model.worldbody.add(
+                'geom',
+                name=f'location_{idx}',
+                type='box',
+                size=[0.15, 0.15, 0.01],  
+                rgba=[1.0, 0.0, 0.0, 0.1],  
+                pos=location,
+                contype=0,  # Set contype to 0 (no collision with any object)
+                conaffinity=0  # Set conaffinity to 0 (no influence on collision detection)
+            )
 
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
@@ -291,7 +314,7 @@ class RearrangementEnv(dm_env.Environment):
         """
         Updates the environment according to the action and returns a `TimeStep`.
         """
-
+        observation = self._compute_observation()
         if self.mode == "pick":
             self.pick(action_dict['pose'])
             self.mode="place"
@@ -303,7 +326,7 @@ class RearrangementEnv(dm_env.Environment):
                 step_type=dm_env.StepType.MID,
                 reward=0.0,
                 discount=0.0,
-                observation=self._compute_observation(),
+                observation=observation,
             )
 
     def pick(self, pose):
@@ -538,7 +561,9 @@ class RearrangementEnv(dm_env.Environment):
         # generate pick pose from object
         obj_rot = R.from_quat(obj_quat)
         obj_rot_mat = obj_rot.as_matrix()
-        obj_rot_z = np.rad2deg(np.arctan2(obj_rot_mat[1,0], obj_rot_mat[0,0]))
+        obj_rot_z = abs(np.rad2deg(np.arctan2(obj_rot_mat[1,0], obj_rot_mat[0,0])))
+        obj_rot_z = min([obj_rot_z, obj_rot_z - 90])
+
         obj_rot = R.from_euler('xyz', [0, 180, obj_rot_z], degrees=True).as_matrix().flatten()
         grasp_quat = np.zeros(4,)
         mujoco.mju_mat2Quat(grasp_quat, obj_rot)
@@ -569,7 +594,7 @@ class RearrangementEnv(dm_env.Environment):
               if mj_id2name(dummy_physics.model.ptr, 5, contact.geom1) == "table/table" or mj_id2name(dummy_physics.model.ptr, 5, contact.geom2) == "table/table":
                 continue
 
-              if contact.dist <= 0.08 and (contact.geom1 in prop_geom_ids or
+              if contact.dist <= 0.05 and (contact.geom1 in prop_geom_ids or
                                         contact.geom2 in prop_geom_ids):
                 return True
 
@@ -660,8 +685,8 @@ class RearrangementEnv(dm_env.Environment):
                 # suggest collision free place pose
                 min_pose = self._cfg.task.initializers.workspace.min_pose.copy()
                 max_pose = self._cfg.task.initializers.workspace.max_pose.copy()
-                min_pose[1] -= 0.15
-                max_pose[1] = -0.2
+                min_pose[1] -= 0.25
+                max_pose[1] = -0.45
                 place_pose = self.prop_place(prop_name, min_pose, max_pose)
 
                 return True, pick_pose, place_pose
@@ -674,8 +699,8 @@ class RearrangementEnv(dm_env.Environment):
                 # suggest collision free place pose
                 min_pose = self._cfg.task.initializers.workspace.min_pose.copy() 
                 max_pose = self._cfg.task.initializers.workspace.max_pose.copy()
-                max_pose[1] += 0.15
-                min_pose[1] = 0.2
+                max_pose[1] += 0.25
+                min_pose[1] = 0.45
                 place_pose = self.prop_place(prop_name, min_pose, max_pose)
                 return True, pick_pose, place_pose
             

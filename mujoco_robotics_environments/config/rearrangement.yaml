@@ -1,5 +1,5 @@
 # mujoco simulation parameters
-physics_dt: 0.001 #0.0005
+physics_dt: 0.0005
 control_dt: 0.005
 gravity: [0.0, 0.0, -9.8]
 nconmax: 1000
