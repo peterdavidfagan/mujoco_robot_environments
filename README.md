@@ -2,6 +2,27 @@
 
 A set of software for creating and prototyping robot workspaces in MuJoCo.
 
+## Getting Started
+
+Ensure all submodule are cloned with the following commands:
+
+```
+git submodule sync
+git submodule update --init --recursive
+```
+
+Ensure you have python version 3.10.6 using [pyenv](https://github.com/pyenv/pyenv). Following this install the python virtual environment for this project with [poetry](https://python-poetry.org/) through running:
+
+```
+poetry install 
+```
+
+Activate the virtual environment with the following command:
+
+```
+poetry shell
+```
+
 ## Task Environments
 
 ### Block Colour Sorting Task 🟦🟩
