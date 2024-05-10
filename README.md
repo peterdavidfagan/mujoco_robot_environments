@@ -27,6 +27,7 @@ poetry shell
 
 ### Colour Sorting Task Environment
 
-[Screencast from 05-10-2024 10:41:43 AM.webm](https://github.com/peterdavidfagan/mujoco_robot_environments/assets/42982057/7e6278b2-7b47-46fe-91de-5ed1fb7ed925)
+[Screencast from 05-10-2024 10:44:19 AM.webm](https://github.com/peterdavidfagan/mujoco_robot_environments/assets/42982057/b4428fff-f58f-4f96-b91f-6c171afb20a2)
+
 
 
