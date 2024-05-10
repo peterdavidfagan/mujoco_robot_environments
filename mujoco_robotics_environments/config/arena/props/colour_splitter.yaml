@@ -1,7 +1,7 @@
-min_objects: 3
-max_objects: 4
+min_objects: 4
+max_objects: 6
 min_object_size: 0.015
-max_object_size: 0.02
+max_object_size: 0.016
 sample_size: true
 sample_colour: true
 color_noise: 0.1
@@ -10,6 +10,10 @@ shapes:
 colours:
   - green
   - blue
+  - red
+  - yellow 
+  - cyan 
+  - magenta
 textures:
   - plain
   - stary

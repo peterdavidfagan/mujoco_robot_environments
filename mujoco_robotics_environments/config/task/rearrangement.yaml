@@ -2,8 +2,8 @@
 initializers:
   seed: 1
   workspace:
-    min_pose: [0.25, -0.2, 0.43]
-    max_pose: [0.6, 0.2, 0.435]
+    min_pose: [0.25, -0.4, 0.43]
+    max_pose: [0.55, 0.4, 0.435]
 
   gripper:
     min_pose: [0.4, -0.0, 0.7, 3.14, 0.0, 0.0]

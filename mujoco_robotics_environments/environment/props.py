@@ -491,7 +491,8 @@ def add_objects(
         else:
             colour = colours[i]
 
-        texture = random.choice(textures)
+        texture = "plain" # for now fix to plain
+        #random.choice(textures)
     
         name = f"{texture}_{colour}_{shape}_{i}"
         obj = add_object(arena,
