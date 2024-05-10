@@ -25,7 +25,8 @@ poetry shell
 
 ## Task Environments
 
-### Block Colour Sorting Task 🟦🟩
+### Colour Sorting Task Environment
 
-[Screencast from 01-08-2024 10:37:26 AM.webm](https://github.com/peterdavidfagan/mujoco_robotics_environments/assets/42982057/f26f5e60-3125-4ab5-b8ed-a52c10d8c206)
+[Screencast from 05-10-2024 10:41:43 AM.webm](https://github.com/peterdavidfagan/mujoco_robot_environments/assets/42982057/7e6278b2-7b47-46fe-91de-5ed1fb7ed925)
+
 
