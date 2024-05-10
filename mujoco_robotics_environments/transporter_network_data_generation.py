@@ -98,45 +98,49 @@ if __name__=="__main__":
         # instantiate task environment
         env = RearrangementEnv(task_config)
         
-        # collect data with envlogger
-        with envlogger.EnvLogger(
-                env,
-                episode_fn=calibration_metadata,
-                backend=tfds_backend_writer.TFDSBackendWriter(
-                    data_directory=DATA_DIR,
-                    split_name="train", # for now default to train and eval on environment directly
-                    max_episodes_per_file=task_config.dataset.max_episodes_per_file,
-                    ds_config=ds_config),
-                ) as env:
-        
-            for _ in range(task_config.dataset.num_episodes):
-                try:
-                    _, _, _, obs = env.reset()
-                    for _ in range(task_config.dataset.max_steps):
-                        in_progress, pick_pose, place_pose = env.sort_colours()
-                        if not in_progress:
-                            print("Task demonstration is complete")
-                            break
 
-                        pick_action = {
-                            "pose": pick_pose,
-                            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
-                            "gripper_rot": 0.0,
-                        }
+        def collect_data(episode_idx):
+            # collect data with envlogger
+            with envlogger.EnvLogger(
+                    env,
+                    episode_fn=calibration_metadata,
+                    backend=tfds_backend_writer.TFDSBackendWriter(
+                        data_directory=DATA_DIR,
+                        split_name="train", # for now default to train and eval on environment directly
+                        max_episodes_per_file=task_config.dataset.max_episodes_per_file,
+                        ds_config=ds_config),
+                    ) as env:
+                start_idx = episode_idx
+                for i in range(task_config.dataset.num_episodes - episode_idx):
+                    try:
+                        _, _, _, obs = env.reset()
+                        for _ in range(task_config.dataset.max_steps):
+                            in_progress, pick_pose, place_pose = env.sort_colours()
+                            if not in_progress:
+                                print("Task demonstration is complete")
+                                break
 
-                        place_action = {
-                            "pose": place_pose,
-                            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
-                            "gripper_rot": 0.0,
-                        }
+                            pick_action = {
+                                "pose": pick_pose,
+                                "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
+                                "gripper_rot": 0.0,
+                            }
 
-                        _, _, _, obs = env.step(pick_action)
-                        _, _, _, obs = env.step(place_action)
-                except Exception as e:
-                    print("Task demonstration failed with exception: {}".format(e))
-                    sys.exit()
-                    continue
-            env.close()
+                            place_action = {
+                                "pose": place_pose,
+                                "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
+                                "gripper_rot": 0.0,
+                            }
+
+                            _, _, _, obs = env.step(pick_action)
+                            _, _, _, obs = env.step(place_action)
+                    except Exception as e:
+                        print("Task demonstration failed with exception: {}".format(e))
+                        break
+                        env.close()
+                        collect_data(start_idx + (i-1))
+                env.close()
+
     
     # upload data to huggingface
     subprocess.call(['python', './hf_scripts/hf_data_upload.py', '+config=transporter'])
