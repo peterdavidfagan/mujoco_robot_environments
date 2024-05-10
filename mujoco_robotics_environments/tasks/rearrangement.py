@@ -82,24 +82,17 @@ class RearrangementEnv(dm_env.Environment):
         )
         self._arena.attach(table, table_attach_site)
 
-        # add target locations
-        top_left = [0.7, 0.4, 0.4]
-        bottom_left = [0.25, 0.4, 0.4]
-        top_right = [0.7, -0.4, 0.4]
-        bottom_right = [0.25, -0.4, 0.4]
-        front = [0.7, 0.0, 0.4]
-        locations = [top_left, bottom_left, top_right, bottom_right, front]
-
-        for idx, location in enumerate(locations):
+        # add visuals for target locations
+        for key, value in cfg.task.target_locations.items():
             self._arena.mjcf_model.worldbody.add(
                 'geom',
-                name=f'location_{idx}',
+                name=key,
                 type='box',
-                size=[0.15, 0.15, 0.01],  
-                rgba=[1.0, 0.0, 0.0, 0.1],  
-                pos=location,
-                contype=0,  # Set contype to 0 (no collision with any object)
-                conaffinity=0  # Set conaffinity to 0 (no influence on collision detection)
+                size=value["size"],  
+                rgba=value["rgba"],  
+                pos=value["location"],
+                contype=0,  # no collision with any object
+                conaffinity=0  # no influence on collision detection
             )
 
         # add robot model with actuators and sensors
@@ -112,19 +105,41 @@ class RearrangementEnv(dm_env.Environment):
             pos=(0.0, 0.0, 0.4),
         )
         self._arena.attach(self.arm, robot_base_site)
+
+
+        # if debugging the task environment add mocap for controller eef
+        from scipy.spatial.transform import Rotation as R
+        
+        self.eef_target_mocap=self._arena.mjcf_model.worldbody.add(
+                'body',
+                name="eef_target_mocap",
+                mocap="true",
+                pos=[0.4, 0.0, 0.6],
+                quat=R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat(),
+            )
+        self.eef_target_mocap.add(
+            'geom',
+            name='mocap_target_viz',
+            type='box',
+            size=[0.025, 0.025, 0.025],  
+            rgba=[1.0, 0.0, 0.0, 0.25],  
+            pos=[0.0, 0.0, 0.0],
+            contype=0,  # no collision with any object
+            conaffinity=0  # no influence on collision detection
+            )
         
         # add props
         self.props = add_objects(
-        self._arena,
-        shapes=cfg.arena.props.shapes,
-        colours=cfg.arena.props.colours,
-        textures=cfg.arena.props.textures,
-        min_object_size=cfg.arena.props.min_object_size,
-        max_object_size=cfg.arena.props.max_object_size,
-        min_objects=cfg.arena.props.min_objects,
-        max_objects=cfg.arena.props.max_objects,
-        sample_size=cfg.arena.props.sample_size,
-        sample_colour=cfg.arena.props.sample_colour,
+            self._arena,
+            shapes=cfg.arena.props.shapes,
+            colours=cfg.arena.props.colours,
+            textures=cfg.arena.props.textures,
+            min_object_size=cfg.arena.props.min_object_size,
+            max_object_size=cfg.arena.props.max_object_size,
+            min_objects=cfg.arena.props.min_objects,
+            max_objects=cfg.arena.props.max_objects,
+            sample_size=cfg.arena.props.sample_size,
+            sample_colour=cfg.arena.props.sample_colour,
         )
         
         # add cameras 
@@ -287,6 +302,7 @@ class RearrangementEnv(dm_env.Environment):
             if self.passive_view is not None:
                 self.passive_view.close()
             self.passive_view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
+            self.passive_view.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
         # create an instance of a robot interface for robot and controllers
         self._robot = RobotArm(
@@ -708,6 +724,34 @@ class RearrangementEnv(dm_env.Environment):
                 continue
 
         return False, None, None
+
+    def interactive_tuning(self):
+        """
+        Interactively control arm to tune simulation parameters. 
+        """
+
+        # get difference between eef site and mocap body
+        mocap_pos = self._physics.data.mocap_pos[0]
+        mocap_quat = self._physics.data.mocap_quat[0]
+
+        # update control target
+        self._robot.arm_controller.set_target(
+            position=mocap_pos + [0.0, 0.0, 0.175],
+            quat=mocap_quat, 
+            velocity=np.zeros(3),
+            angular_velocity=np.zeros(3),
+            )
+
+        arm_command = self._robot.arm_controller.compute_control_output()
+        gripper_command = np.array([self._robot.end_effector_controller.compute_control_output()])
+        control_command = np.concatenate((arm_command, gripper_command))
+
+        # step the simulation
+        for _ in range(5):
+            self._physics.set_control(control_command)
+            self._physics.step()
+            if self.passive_view is not None:
+                self.passive_view.sync()
     
 if __name__=="__main__":
     # clear hydra global state to avoid conflicts with other hydra instances
@@ -728,22 +772,25 @@ if __name__=="__main__":
     env = RearrangementEnv(COLOR_SEPARATING_CONFIG, True)
     _, _, _, obs = env.reset()
 
-    while env.sort_colours()[0]:
-        _, pick_pose, place_pose = env.sort_colours()
+    while True:
+        env.interactive_tuning()
+
+    # while env.sort_colours()[0]:
+    #     _, pick_pose, place_pose = env.sort_colours()
         
-        pick_action = {
-            "pose": pick_pose,
-            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
-            "gripper_rot": None,
-        }
+    #     pick_action = {
+    #         "pose": pick_pose,
+    #         "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
+    #         "gripper_rot": None,
+    #     }
 
-        place_action = {
-            "pose": place_pose,
-            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
-            "gripper_rot": None,
-        }
+    #     place_action = {
+    #         "pose": place_pose,
+    #         "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
+    #         "gripper_rot": None,
+    #     }
 
-        _, _, _, obs = env.step(pick_action)
-        _, _, _, obs = env.step(place_action)
+    #     _, _, _, obs = env.step(pick_action)
+    #     _, _, _, obs = env.step(place_action)
     env.close()
     

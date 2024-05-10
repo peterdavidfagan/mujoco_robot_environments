@@ -5,7 +5,7 @@ import tarfile
 import tensorflow_datasets as tfds
 from huggingface_hub import HfApi
 
-LOCAL_FILEPATH="/home/peter/Code/mujoco_robotics_environments/mujoco_robotics_environments/data"
+LOCAL_FILEPATH="/home/peter/Code/temp/mujoco_robot_environments/mujoco_robotics_environments/data"
 
 if __name__=="__main__":
 
