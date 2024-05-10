@@ -108,25 +108,24 @@ class RearrangementEnv(dm_env.Environment):
 
 
         # if debugging the task environment add mocap for controller eef
-        from scipy.spatial.transform import Rotation as R
-        
-        self.eef_target_mocap=self._arena.mjcf_model.worldbody.add(
-                'body',
-                name="eef_target_mocap",
-                mocap="true",
-                pos=[0.4, 0.0, 0.6],
-                quat=R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat(),
-            )
-        self.eef_target_mocap.add(
-            'geom',
-            name='mocap_target_viz',
-            type='box',
-            size=[0.025, 0.025, 0.025],  
-            rgba=[1.0, 0.0, 0.0, 0.25],  
-            pos=[0.0, 0.0, 0.0],
-            contype=0,  # no collision with any object
-            conaffinity=0  # no influence on collision detection
-            )
+        if cfg.simulation_tuning_mode:
+            self.eef_target_mocap=self._arena.mjcf_model.worldbody.add(
+                    'body',
+                    name="eef_target_mocap",
+                    mocap="true",
+                    pos=[0.4, 0.0, 0.6],
+                    quat=R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat(),
+                )
+            self.eef_target_mocap.add(
+                'geom',
+                name='mocap_target_viz',
+                type='box',
+                size=[0.025, 0.025, 0.025],  
+                rgba=[1.0, 0.0, 0.0, 0.25],  
+                pos=[0.0, 0.0, 0.0],
+                contype=0,  # no collision with any object
+                conaffinity=0  # no influence on collision detection
+                )
         
         # add props
         self.props = add_objects(
@@ -302,7 +301,6 @@ class RearrangementEnv(dm_env.Environment):
             if self.passive_view is not None:
                 self.passive_view.close()
             self.passive_view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
-            self.passive_view.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
         # create an instance of a robot interface for robot and controllers
         self._robot = RobotArm(
@@ -688,42 +686,56 @@ class RearrangementEnv(dm_env.Environment):
         return pick_pose, place_pose
 
     def sort_colours(self): 
-        """Generates pick/place action for sorting blue/green coloured blocks"""
-        colours = ["blue", "green"]
-        
+        """Generates pick/place action for sorting coloured blocks"""  
+
+        def get_location_bounds(target_location):
+            min_x = target_location['location'][0] - target_location['size'][0]/2
+            max_x = target_location['location'][0] + target_location['size'][0]/2
+            min_y = target_location['location'][1] - target_location['size'][1]/2
+            max_y = target_location['location'][1] + target_location['size'][1]/2
+            min_z = 0.4  # Hardcoded value for Z
+            max_z = 0.4  # Hardcoded value for Z
+            return np.array((min_x, min_y, min_z)), np.array((max_x, max_y, max_z))
+
+        def is_within_target(target, position):
+            """
+            Check if point is within bounds of target location (rectangle).
+            """
+            min_pose, max_pose = get_location_bounds(target_location)
+            min_x = min_pose[0]
+            max_x = max_pose[0]
+            min_y = min_pose[1]
+            max_y = max_pose[1]
+            x, y, _ = position
+
+            if min_x <= x <= max_x and min_y <= y <= max_y:
+                return True
+            else:
+                return False
+
+            
         for prop_id, attributes in self.props_info.items():
             prop_pos = attributes["position"]
             prop_name = attributes["prop_name"]
-            if (prop_pos[1] > -0.2) and (colours[0] in attributes["symbols"]):
-                # get object pick pose
-                pick_pose = self.prop_pick(prop_id)
+            prop_colour = prop_name.split("_")[1]
 
-                # suggest collision free place pose
-                min_pose = self._cfg.task.initializers.workspace.min_pose.copy()
-                max_pose = self._cfg.task.initializers.workspace.max_pose.copy()
-                min_pose[1] -= 0.25
-                max_pose[1] = -0.45
+            # check if prop is within bounds of target location
+            target_location_name = self._cfg.task.colour_target_map[prop_colour]
+            target_location = self._cfg.task.target_locations[target_location_name]
+
+            if not is_within_target(target_location, prop_pos):
+                # get the pick pose
+                pick_pose = self.prop_pick(prop_id)
+                
+                # sample collision-free place pose within target
+                min_pose, max_pose = get_location_bounds(target_location)
                 place_pose = self.prop_place(prop_name, min_pose, max_pose)
 
                 return True, pick_pose, place_pose
-
-            elif (prop_pos[1] <= 0.2) and (colours[1] in attributes["symbols"]):
-
-                # get object pick pose
-                pick_pose = self.prop_pick(prop_id)
-
-                # suggest collision free place pose
-                min_pose = self._cfg.task.initializers.workspace.min_pose.copy() 
-                max_pose = self._cfg.task.initializers.workspace.max_pose.copy()
-                max_pose[1] += 0.25
-                min_pose[1] = 0.45
-                place_pose = self.prop_place(prop_name, min_pose, max_pose)
-                return True, pick_pose, place_pose
-            
             else:
                 continue
 
-        return False, None, None
+            return False, None, None
 
     def interactive_tuning(self):
         """
@@ -764,33 +776,37 @@ if __name__=="__main__":
     COLOR_SEPARATING_CONFIG = compose(
             config_name="rearrangement",
             overrides=[
-                "arena/props=colour_splitter"
+                "arena/props=colour_splitter",
+                "simulation_tuning_mode=True"
                 ]
                           )
 
     # instantiate color separation task
     env = RearrangementEnv(COLOR_SEPARATING_CONFIG, True)
-    _, _, _, obs = env.reset()
 
+    # expert demonstration
+    _, _, _, obs = env.reset()
+    while env.sort_colours()[0]:
+        _, pick_pose, place_pose = env.sort_colours()
+        
+        pick_action = {
+            "pose": pick_pose,
+            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
+            "gripper_rot": None,
+        }
+
+        place_action = {
+            "pose": place_pose,
+            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
+            "gripper_rot": None,
+        }
+
+        _, _, _, obs = env.step(pick_action)
+        _, _, _, obs = env.step(place_action)
+
+    # interactive control of robot with mocap body
+    _, _, _, obs = env.reset()
     while True:
         env.interactive_tuning()
-
-    # while env.sort_colours()[0]:
-    #     _, pick_pose, place_pose = env.sort_colours()
-        
-    #     pick_action = {
-    #         "pose": pick_pose,
-    #         "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
-    #         "gripper_rot": None,
-    #     }
-
-    #     place_action = {
-    #         "pose": place_pose,
-    #         "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
-    #         "gripper_rot": None,
-    #     }
-
-    #     _, _, _, obs = env.step(pick_action)
-    #     _, _, _, obs = env.step(place_action)
     env.close()
     

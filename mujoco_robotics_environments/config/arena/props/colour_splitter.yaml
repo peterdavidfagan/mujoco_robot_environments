@@ -1,5 +1,5 @@
-min_objects: 4
-max_objects: 6
+min_objects: 2
+max_objects: 5
 min_object_size: 0.015
 max_object_size: 0.016
 sample_size: true

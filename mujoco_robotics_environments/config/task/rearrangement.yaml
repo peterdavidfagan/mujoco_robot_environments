@@ -42,7 +42,18 @@ target_locations:
     rgba: [1.0, 0.0, 1.0, 0.1]  
 
   bottom_middle:
-    name: "top_middle"
+    name: "bottom_middle"
     location: [0.35, 0.0, 0.4]
     size: [0.075, 0.15, 0.01] 
     rgba: [0.0, 1.0, 1.0, 0.1]  
+
+# mapping of colour name to target location
+colour_target_map:
+  red: "top_left"
+  green: "bottom_left"
+  blue: "top_right"
+  yellow: "bottom_right"
+  magenta: "top_middle"
+  cyan: "bottom_middle"
+
+  

@@ -30,6 +30,8 @@ wandb:
     data_table:
       columns: ["placeholder"]
 
+simulation_tuning_mode: False
+
 defaults:
   - arena: rearrangement_table
   - robots: franka_robotiq_2f85
