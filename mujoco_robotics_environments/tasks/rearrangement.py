@@ -161,6 +161,10 @@ class RearrangementEnv(dm_env.Environment):
         # compile environment
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
         self.renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
+        self.seg_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
+        self.seg_renderer.enable_segmentation_rendering()
+        self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
+        self.depth_renderer.enable_depth_rendering()
         self.passive_view = None
         
         # instantiate initializers
@@ -247,11 +251,9 @@ class RearrangementEnv(dm_env.Environment):
            return bbox_corners
 
        # TODO: consider vectorizing this
-       # segmentation_map = self._physics.render(segmentation=True)
        camera_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_CAMERA, "overhead_camera/overhead_camera")
-       self.renderer.update_scene(self._physics.data.ptr, camera_id)
-       self.renderer.enable_segmentation_rendering()
-       segmentation_map = self.renderer.render()
+       self.seg_renderer.update_scene(self._physics.data.ptr, camera_id)
+       segmentation_map = self.seg_renderer.render()
        
        prop_bbox = []
        for idx in prop_ids:
@@ -290,11 +292,6 @@ class RearrangementEnv(dm_env.Environment):
 
         # sample new object positions with initializers
         self.prop_initializer(self._physics, self.prop_random_state)
-        
-
-        # reset arm to home position
-        # Note: for other envs we may want random sampling of initial arm positions
-        self.arm.set_joint_angles(self._physics, self.arm.named_configurations["home"])
 
         # configure viewer
         if self.has_viewer:
@@ -450,14 +447,13 @@ class RearrangementEnv(dm_env.Environment):
         # get overhead camera
         camera_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_CAMERA, "overhead_camera/overhead_camera")
         self.renderer.update_scene(self._physics.data.ptr, camera_id)
-        
-        # get depth data
-        self.renderer.enable_depth_rendering()
-        depth = self.renderer.render()
-        self.renderer.disable_depth_rendering()
+        self.depth_renderer.update_scene(self._physics.data.ptr, camera_id)
         
         # get rgb data
         rgb = self.renderer.render()
+
+        # get depth data
+        depth = self.depth_renderer.render()
         
         # add to observation
         obs = {}
@@ -505,9 +501,8 @@ class RearrangementEnv(dm_env.Environment):
         # render depth value for projection purposes 
         camera_type_idx = mujoco.mjtObj.mjOBJ_CAMERA
         camera_id = mj_name2id(self._physics.model.ptr, camera_type_idx, camera_name)
-        self.renderer.update_scene(self._physics.data.ptr, camera_id)
-        self.renderer.enable_depth_rendering()
-        depth_vals = self.renderer.render()
+        self.depth_renderer.update_scene(self._physics.data.ptr, camera_id)
+        depth_vals = self.depth_renderer.render()
         depth_val = depth_vals[coords_rounded[1], coords_rounded[0]]
         
         # convert pixels to camera frame coordinates

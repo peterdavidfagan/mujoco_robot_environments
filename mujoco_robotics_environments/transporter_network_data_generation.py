@@ -95,11 +95,11 @@ if __name__=="__main__":
             else:
                 return None
 
-        # instantiate task environment
-        env = RearrangementEnv(task_config)
-        
-
-        def collect_data(episode_idx):
+        episode_idx=0
+        while (task_config.dataset.num_episodes - episode_idx>=0):
+            # instantiate task environment
+            env = RearrangementEnv(task_config)
+            
             # collect data with envlogger
             with envlogger.EnvLogger(
                     env,
@@ -111,8 +111,9 @@ if __name__=="__main__":
                         ds_config=ds_config),
                     ) as env:
                 start_idx = episode_idx
-                for i in range(task_config.dataset.num_episodes - episode_idx):
+                for i in range(10):
                     try:
+                        episode_idx += 1
                         _, _, _, obs = env.reset()
                         for _ in range(task_config.dataset.max_steps):
                             in_progress, pick_pose, place_pose = env.sort_colours()
@@ -137,10 +138,10 @@ if __name__=="__main__":
                     except Exception as e:
                         print("Task demonstration failed with exception: {}".format(e))
                         break
-                        env.close()
-                        collect_data(start_idx + (i-1))
-                env.close()
-
+                    
+                    if (task_config.dataset.num_episodes - episode_idx) <= 0:
+                        break
+            env.close()
     
     # upload data to huggingface
     subprocess.call(['python', './hf_scripts/hf_data_upload.py', '+config=transporter'])
