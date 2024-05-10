@@ -1,6 +1,7 @@
 """Generating data for the transporter network."""
 
 import os
+import sys
 import subprocess
 from absl import logging
 import time
@@ -133,6 +134,7 @@ if __name__=="__main__":
                         _, _, _, obs = env.step(place_action)
                 except Exception as e:
                     print("Task demonstration failed with exception: {}".format(e))
+                    sys.exit()
                     continue
             env.close()
     
