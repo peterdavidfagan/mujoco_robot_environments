@@ -142,7 +142,7 @@ class Rectangle(Prop):
         rgba: Tuple[float, float, float,float]=(1, 0, 0, 1),
         texture: str = "plain",
         solimp: Tuple[float, float, float]=(0.95, 0.995, 0.001, 0.5, 3),
-        solref: Tuple[float, float, float]=(0.01, 1.1),
+        solref: Tuple[float, float, float]=(0.04, 1.1),
         mass: float = 0.15,
         margin: float = 0.15,
         gap: float = 0.15,

@@ -735,7 +735,7 @@ class RearrangementEnv(dm_env.Environment):
             else:
                 continue
 
-            return False, None, None
+        return False, None, None
 
     def interactive_tuning(self):
         """
@@ -808,5 +808,6 @@ if __name__=="__main__":
     _, _, _, obs = env.reset()
     while True:
         env.interactive_tuning()
+
     env.close()
     
