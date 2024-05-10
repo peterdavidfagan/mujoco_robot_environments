@@ -27,6 +27,13 @@ poetry shell
 
 ### Colour Sorting Task Environment
 
+An toy environment for reasoning about visual semantics. This environment is compatible with training transporter networks and intended to be used in research and for robot learning education.
+
+#### Scripted Expert Demonstrations (Data Collection)
+[Screencast from 05-10-2024 11:45:47 AM.webm](https://github.com/peterdavidfagan/mujoco_robot_environments/assets/42982057/7ac279da-0268-4ef2-8d4a-85eed6a7f364)
+
+
+#### Interactive Environment Tuning
 [Screencast from 05-10-2024 10:44:19 AM.webm](https://github.com/peterdavidfagan/mujoco_robot_environments/assets/42982057/b4428fff-f58f-4f96-b91f-6c171afb20a2)
 
 
