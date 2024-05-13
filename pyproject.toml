@@ -22,7 +22,10 @@ classifiers = [
 ]
 
 [tool.setuptools]
-py-modules=["mujoco_robot_environments"]
+py-modules=[
+	"mujoco_robot_environments",
+	"mujoco_robot_environments.tasks",
+	]
 
 [tool.poetry.dependencies]
 python = "3.10.6"
