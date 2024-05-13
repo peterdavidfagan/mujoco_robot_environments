@@ -2,7 +2,7 @@ version: "3"
 
 services:
   mujoco:
-    image: ghcr.io/peterdavidfagan/mujoco_robotics_environments:latest
+    image: ghcr.io/peterdavidfagan/mujoco_robot_environments:latest
     build:
       context: ../
       dockerfile: .docker/Dockerfile

@@ -15,7 +15,7 @@ from dm_control import composer, mjcf
 from mujoco_controllers.build_env import construct_physics
 from mujoco_controllers.osc import OSC
 
-from mujoco_robotics_environments.tasks.rearrangement import RearrangementEnv
+from mujoco_robot_environments.tasks.rearrangement import RearrangementEnv
 from hydra import compose, initialize
 from hydra.utils import instantiate
 

@@ -20,12 +20,24 @@ from hydra.utils import instantiate
 from hydra import compose, initialize
 from omegaconf import DictConfig
 
-from mujoco_robotics_environments.models.arenas import empty
-from mujoco_robotics_environments.models.robot_arm import standard_compose
-from mujoco_robotics_environments.environment.props import add_objects, Rectangle
-from mujoco_robotics_environments.environment.cameras import add_camera
-from mujoco_robotics_environments.environment.prop_initializer import PropPlacer
-from mujoco_robotics_environments.models.robot_arm import RobotArm
+from mujoco_robot_environments.models.arenas import empty
+from mujoco_robot_environments.models.robot_arm import standard_compose
+from mujoco_robot_environments.environment.props import add_objects, Rectangle
+from mujoco_robot_environments.environment.cameras import add_camera
+from mujoco_robot_environments.environment.prop_initializer import PropPlacer
+from mujoco_robot_environments.models.robot_arm import RobotArm
+
+
+def generate_default_config():
+    hydra.core.global_hydra.GlobalHydra.instance().clear()
+    initialize(version_base=None, config_path="../config", job_name="rearrangement")
+    return compose(
+            config_name="rearrangement",
+            overrides=[
+                "arena/props=colour_splitter",
+                "simulation_tuning_mode=False"
+                ]
+                          )
 
 
 class RearrangementEnv(dm_env.Environment):
@@ -33,8 +45,8 @@ class RearrangementEnv(dm_env.Environment):
 
     def __init__(
         self,
-        cfg: DictConfig, # TODO: migrate to make API
         viewer: Optional = None,
+        cfg: DictConfig = generate_default_config(),
     ):
         """Initializes the simulation environment from config."""
         # ensure mjcf paths are relative to this file
@@ -774,10 +786,10 @@ if __name__=="__main__":
                 "arena/props=colour_splitter",
                 "simulation_tuning_mode=True"
                 ]
-                          )
+                )
 
     # instantiate color separation task
-    env = RearrangementEnv(COLOR_SEPARATING_CONFIG, True)
+    env = RearrangementEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
 
     # expert demonstration
     _, _, _, obs = env.reset()

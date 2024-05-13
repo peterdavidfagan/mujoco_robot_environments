@@ -1,6 +1,6 @@
 {
-  "name": "mujoco_robotics_environments",
-  "image": "ghcr.io/peterdavidfagan/mujoco_robotics_environments:latest",
+  "name": "mujoco_robot_environments",
+  "image": "ghcr.io/peterdavidfagan/mujoco_robot_environments:latest",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest"

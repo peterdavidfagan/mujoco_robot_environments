@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from mujoco_robotics_environments.tasks.rearrangement import RearrangementEnv
+from mujoco_robot_environments.tasks.rearrangement import RearrangementEnv
 
 import envlogger
 from envlogger.backends import tfds_backend_writer

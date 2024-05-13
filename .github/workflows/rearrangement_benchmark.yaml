@@ -1,4 +1,4 @@
-name: mujoco_robotics_environments
+name: mujoco_robot_environments
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
       - .gitmodules
       - rearrangement_task/**
       - .docker/**
-      - .github/workflows/mujoco_robotics_environments.yaml
+      - .github/workflows/mujoco_robot_environments.yaml
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   ORG_NAME: peterdavidfagan
-  IMAGE_NAME: mujoco_robotics_environments
+  IMAGE_NAME: mujoco_robot_environments
 
 jobs:
   build-and-push-image:

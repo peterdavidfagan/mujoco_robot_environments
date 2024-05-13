@@ -2,7 +2,7 @@
 from typing import Tuple
 import numpy as np
 
-from mujoco_robotics_environments.environment.props import Prop
+from mujoco_robot_environments.environment.props import Prop
 from dm_control import composer, mjcf, mujoco
 import PIL.Image
 

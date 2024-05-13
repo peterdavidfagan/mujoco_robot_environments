@@ -6,9 +6,9 @@ from typing import Tuple
 from dm_control import composer, mjcf
 
 # custom props
-from mujoco_robotics_environments.models.arenas import empty
-from mujoco_robotics_environments.environment.props import add_objects, Rectangle
-from mujoco_robotics_environments.environment.cameras import add_camera
+from mujoco_robot_environments.models.arenas import empty
+from mujoco_robot_environments.environment.props import add_objects, Rectangle
+from mujoco_robot_environments.environment.cameras import add_camera
 
 # config
 import hydra

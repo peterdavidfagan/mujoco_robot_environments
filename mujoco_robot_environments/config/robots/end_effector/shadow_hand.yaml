@@ -4,7 +4,7 @@ defaults:
   - controller_config: shadow_hand
 
 end_effector:
-  _target_: mujoco_robotics_environments.models.end_effectors.shadow_hand.ShadowHand
+  _target_: mujoco_robot_environments.models.end_effectors.shadow_hand.ShadowHand
   mjcf_path: "../submodules/mujoco_menagerie/shadow_hand/right_hand.xml"
   actuator_config: ${robots.end_effector.actuator_config}
   sensor_config: ${robots.end_effector.sensor_config}

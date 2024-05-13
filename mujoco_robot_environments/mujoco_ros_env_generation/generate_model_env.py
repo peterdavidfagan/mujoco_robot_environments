@@ -5,7 +5,7 @@ import numpy as np
 import mujoco
 from dm_control import mjcf
 
-from mujoco_robotics_environments.tasks.rearrangement import RearrangementEnv
+from mujoco_robot_environments.tasks.rearrangement import RearrangementEnv
 
 import hydra
 from hydra import compose, initialize
