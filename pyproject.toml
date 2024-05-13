@@ -24,7 +24,7 @@ classifiers = [
 [tool.setuptools]
 py-modules=[
 	"mujoco_robot_environments",
-	"mujoco_robot_environments.tasks",
+	"mujoco_robot_environments/tasks/*",
 	]
 
 [tool.poetry.dependencies]
