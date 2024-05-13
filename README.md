@@ -4,23 +4,42 @@ A set of software for creating and prototyping robot workspaces in MuJoCo.
 
 ## Getting Started
 
+### Local Development 
+
 Ensure all submodule are cloned with the following commands:
 
-```
+```bash
 git submodule sync
 git submodule update --init --recursive
 ```
 
 Ensure you have python version 3.10.6 using [pyenv](https://github.com/pyenv/pyenv). Following this install the python virtual environment for this project with [poetry](https://python-poetry.org/) through running:
 
-```
+```bash
 poetry install 
 ```
 
 Activate the virtual environment with the following command:
 
-```
+```bash
 poetry shell
+```
+
+### Package Installation 
+
+Install from PYPI via (Note: for now only Linux is supported): 
+```bash
+pip install mujoco_robot_environments
+```
+
+Example usage:
+
+```python
+from mujoco_robot_environments.tasks.rearrangement import RearrangementEnv
+
+env = RearrangementEnv(viewer=True)
+env.reset()
+...
 ```
 
 ## Task Environments
