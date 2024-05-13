@@ -7,7 +7,7 @@ njmax: 2000
 offheight: 640
 offwidth: 640
 znear: 0.0005
-viewer: True # whether or not to use passive viewer
+viewer: False # whether or not to use passive viewer
 
 # weights and biases experiment tracking
 wandb:
