@@ -1,5 +1,5 @@
 [project]
-name = "mujoco_robotics_environments"
+name = "mujoco_robot_environments"
 version = "0.0.0"
 description = "Simulation environments for basic manipulation tasks."
 authors = [
@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 
 [tool.poetry]
-name = "mujoco_robotics_environments"
+name = "mujoco_robot_environments"
 version = "0.0.0"
 description = "Simulation environments for basic manipulation tasks."
 license = "Apache-2.0"
