@@ -1,6 +1,3 @@
-[submodule "mujoco_robot_environments/mujoco_pkgs/mujoco_controllers"]
-	path = mujoco_robot_environments/mujoco_pkgs/mujoco_controllers
-	url = git@github.com:peterdavidfagan/mujoco_controllers.git
 [submodule "mujoco_robot_environments/mujoco_pkgs/mujoco_menagerie"]
 	path = mujoco_robot_environments/mujoco_pkgs/mujoco_menagerie
 	url = git@github.com:peterdavidfagan/mujoco_menagerie.git
