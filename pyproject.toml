@@ -21,11 +21,13 @@ classifiers = [
     "Operating System :: POSIX :: Linux"
 ]
 
-[tool.setuptools]
 packages=[
 	"mujoco_robot_environments",
 	"mujoco_robot_environments/tasks/*.py",
 	]
+
+[tool.setuptools]
+py-modules=["mujoco_robot_environments"]
 
 [tool.poetry.dependencies]
 python = "3.10.6"
