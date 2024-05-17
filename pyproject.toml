@@ -13,7 +13,7 @@ readme = "README.md"
 
 [tool.poetry]
 name = "mujoco_robot_environments"
-version = "0.0.1"
+version = "0.0.2"
 description = "Simulation environments for basic manipulation tasks."
 license = "Apache-2.0"
 authors = [
@@ -32,10 +32,11 @@ packages = [
 py-modules=["mujoco_robot_environments"]
 
 [tool.poetry.dependencies]
-python = "^3.10.6"
+python = "3.10.6"
 numpy = "^1.16.0"
-mujoco = "3.1.1"
-mujoco_controllers = "^0.0.0" 
+mujoco = "^3.1.1"
+mujoco_controllers = "^0.0.2" 
+brax = "^0.10.4"
 dm-control = "1.0.16"
 pillow = "10.0.0"
 matplotlib = "^3.7.2"
@@ -48,19 +49,14 @@ jupyterlab = "^4.0.9"
 inflect = "^7.0.0"
 wandb = "^0.16.1"
 huggingface-hub = "^0.23.0"
+evojax= "^0.2.16" 	
+evosax= "^0.1.6"
 
 # linux only deps
 dm-reverb = {version="0.13.0", markers = "sys_platform == 'linux'"}
 tensorflow-cpu = {version="^2.14.0", markers = "sys_platform == 'linux'"}
 envlogger = {extras = ["tfds"], version = "^1.2"}
 rlds = {version="^0.1.7", markers = "sys_platform == 'linux'"}
-
-[tool.poetry.group.dev.dependencies]
-mujoco_controllers = {path="./mujoco_robot_environments/mujoco_pkgs/mujoco_controllers", develop=true}
-
-[tool.poetry.group.tuning.dependencies]
-evojax= "^0.0.0" 	
-evosax= "^0.0.0"
 
 [tool.black]
 line-length = 120
