@@ -1,0 +1,11 @@
+defaults:
+  - actuator_config: default
+  - sensor_config: default
+  - controller_config: min_max
+
+end_effector:
+  _target_: mujoco_robot_environments.models.end_effectors.robotiq_2f85.Robotiq2F85
+  mjcf_path: "../mujoco_pkgs/mujoco_menagerie/robotiq_2f85/2f85_mjx.xml"
+  actuator_config: ${robots.end_effector.actuator_config}
+  sensor_config: ${robots.end_effector.sensor_config}
+  controller_config: ${robots.end_effector.controller_config}
