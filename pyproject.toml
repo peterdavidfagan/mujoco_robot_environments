@@ -55,7 +55,7 @@ evosax= "^0.1.6"
 # linux only deps
 dm-reverb = {version="0.13.0", markers = "sys_platform == 'linux'"}
 tensorflow-cpu = {version="^2.14.0", markers = "sys_platform == 'linux'"}
-envlogger = {extras = ["tfds"], version = "^1.2"}
+envlogger = {extras = ["tfds"], version = "^1.2", markers = "sys_platform == 'linux'"}
 rlds = {version="^0.1.7", markers = "sys_platform == 'linux'"}
 
 [tool.black]
