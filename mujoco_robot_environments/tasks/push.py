@@ -51,7 +51,6 @@ class RearrangementEnv(dm_env.Environment):
         """Initializes the simulation environment from config."""
         # ensure mjcf paths are relative to this file
         file_path = Path(__file__).parent.absolute()
-        cfg.robots.arm.arm.mjcf_path = str(file_path / cfg.robots.arm.arm.mjcf_path)
         self._cfg = cfg
        
         # check if viewer is requested in input args, otherwise use config
