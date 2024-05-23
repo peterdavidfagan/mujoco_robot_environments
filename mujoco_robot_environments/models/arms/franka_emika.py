@@ -1,15 +1,25 @@
 """Franka Emika Panda Robot Arm."""
 
+import os
 import numpy as np
 
 from dm_control import mjcf
+from robot_descriptions import panda_mj_description
 from mujoco_controllers.models.arms.robot_arm import RobotArm
 
+PANDA_MJCF_PATH = os.path.join(panda_mj_description.PACKAGE_PATH, 'panda_nohand.xml')
 
 class FER(RobotArm):
     """Franka Emika Panda Robot Arm."""
 
-    def __init__(self, mjcf_path: str, actuator_config: dict, sensor_config: dict=None, controller_config: dict=None, configuration_config: dict=None):
+    def __init__(
+        self, 
+        mjcf_path: str = PANDA_MJCF_PATH,
+        actuator_config: dict = None, 
+        sensor_config: dict = None, 
+        controller_config: dict = None, 
+        configuration_config: dict = None
+        ):
         """Initialize the robot arm."""
         self.mjcf_path = mjcf_path
         self.actuator_config = actuator_config
@@ -20,12 +30,18 @@ class FER(RobotArm):
         super().__init__()
 
     def _build(self):
-        self._fer_root = mjcf.from_path(self.mjcf_path)
+        self._fer_root = mjcf.from_path(self.mjcf_path, escape_separators=True)
+        for keyframe in self._fer_root.find_all('key'):
+            keyframe.remove()
+
+        # assign joints
         self._joints = self._fer_root.find_all("joint")
+        
         # add sensors and actuators
         self._add_actuators()
-        self._add_sensors()
         self._actuators = self._fer_root.find_all("actuator")
+        self._add_sensors()
+        
         # define attachment and wrist sites
         self._attachment_site = self._fer_root.find("site", "attachment_site")
         self._wrist_site = self._attachment_site
@@ -33,6 +49,10 @@ class FER(RobotArm):
     # TODO: Refactor this
     def _add_actuators(self):
         """Override the actuator model by config."""
+        # remove default actuator models from mjcf
+        for actuator in self._fer_root.find_all('actuator'):
+            actuator.remove()
+
         if self.actuator_config["type"] == "motor":
             for idx, (joint, joint_type) in enumerate(self.actuator_config["joint_actuator_mapping"].items()):
                 print("Adding actuator for joint: {}".format(joint))
