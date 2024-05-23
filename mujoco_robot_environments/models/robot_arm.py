@@ -23,8 +23,8 @@ class RobotArm(abc.ABC):
   def __init__(
         self,
         arm,
-        gripper,
         physics: mjcf.Physics,
+        gripper = None,
         passive_viewer: Optional = None,
         ):
     """Initializes the robot arm and gripper."""
@@ -40,10 +40,13 @@ class RobotArm(abc.ABC):
     self.arm_joint_ids = np.array(physics.bind(self.arm_joints).dofadr)
     
     # set gripper and controller
-    self.end_effector = gripper
-    self.end_effector_controller = self.end_effector.controller_config.controller # very simple controller no need for models or physics
-    self.end_effector_joints = self.end_effector.joints
-    self.end_effector_joint_ids = np.array(physics.bind(self.end_effector_joints).dofadr)
+    if gripper is not None:
+      self.end_effector = gripper
+      self.end_effector_controller = self.end_effector.controller_config.controller # very simple controller no need for models or physics
+      self.end_effector_joints = self.end_effector.joints
+      self.end_effector_joint_ids = np.array(physics.bind(self.end_effector_joints).dofadr)
+    else:
+      self.end_effector = None  
     
     # set control timestep
     self.control_steps = int(self.arm.controller_config.controller_params.control_dt // self.physics.model.opt.timestep)
@@ -58,15 +61,16 @@ class RobotArm(abc.ABC):
     """Runs the controller for a specified duration."""
     # set controller convergence status
     arm_converged = False
-    gripper_converged = False
+    gripper_converged = False if self.end_effector is not None else True
     converged = False
 
     start_time = self.physics.data.time
     while (self.physics.data.time - start_time < duration) and (not converged):
         # compute control command
-        arm_command = self.arm_controller.compute_control_output()
-        gripper_command = np.array([self.end_effector_controller.compute_control_output()])
-        control_command = np.concatenate((arm_command, gripper_command))
+        control_command = self.arm_controller.compute_control_output()
+        if self.end_effector is not None:
+          gripper_command = np.array([self.end_effector_controller.compute_control_output()])
+          control_command = np.concatenate((control_command, gripper_command))
 
         # step the simulation
         for _ in range(self.control_steps):

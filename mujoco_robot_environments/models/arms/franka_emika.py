@@ -69,14 +69,25 @@ class FER(RobotArm):
     # TODO: Refactor this
     def _add_sensors(self):
         """Override the sensor model by config."""
-        if self.sensor_config["type"] == "jointpos":
-            for idx, (joint, joint_type) in enumerate(self.sensor_config["joint_sensor_mapping"].items()):
-                print("Adding sensor for joint: {}".format(joint))
-                sensor = self._fer_root.sensor.add(
-                    "jointpos",
-                    **self.sensor_config[joint],
-                )
-                sensor.joint = self._joints[idx]
+        for sensor_suite in self.sensor_config:
+            if sensor_suite["type"] == "jointpos":
+                for idx, (joint, joint_type) in enumerate(sensor_suite["joint_sensor_mapping"].items()):
+                    print("Adding sensor for joint: {}".format(joint))
+                    sensor = self._fer_root.sensor.add(
+                        "jointpos",
+                        **sensor_suite[joint],
+                    )
+                    sensor.joint = self._joints[idx]
+            elif sensor_suite["type"] == "jointtorque":
+                for idx, (joint, joint_type) in enumerate(sensor_suite["joint_sensor_mapping"].items()):
+                    print("Adding sensor for joint: {}".format(joint))
+                    sensor = self._fer_root.sensor.add(
+                        "jointpos",
+                        **sensor_suite[joint],
+                    )
+                    sensor.joint = self._joints[idx]
+            else:
+                raise ValueError
 
     @property
     def joints(self):
