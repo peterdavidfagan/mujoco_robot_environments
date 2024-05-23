@@ -3,14 +3,17 @@
 from typing import List, Tuple, Optional
 
 from dm_control import mjcf
+from robot_descriptions import robotiq_2f85_mj_description
 from mujoco_controllers.models.end_effectors.robot_hand import RobotHand
 import numpy as np
+
+ROBOTIQ_MJCF_PATH = robotiq_2f85_mj_description.MJCF_PATH
 
 class Robotiq2F85(RobotHand):
   """Robotiq 2-finger 85 adaptive gripper."""
 
   def __init__(self,
-          mjcf_path: str,
+          mjcf_path: str = ROBOTIQ_MJCF_PATH,
           actuator_config: dict = None, # for now we don't alter default actuator config
           sensor_config: dict = None,
           controller_config: dict = None,
@@ -41,8 +44,6 @@ class Robotiq2F85(RobotHand):
     self._actuators = self.robotiq_root.find_all('actuator')
     self._tool_center_point = self.robotiq_root.find('site', 'pinch')
     
-    # consider adding tcp site
-
   @property
   def joints(self):
     """List of joint elements belonging to the hand."""

@@ -9,7 +9,6 @@ default_configurations:
 
 arm:
   _target_: mujoco_robot_environments.models.arms.franka_emika.FER
-  mjcf_path: "../mujoco_pkgs/mujoco_menagerie/franka_emika_panda/panda_nohand.xml"
   actuator_config: ${robots.arm.actuator_config}
   sensor_config: ${robots.arm.sensor_config}
   controller_config: ${robots.arm.controller_config}
