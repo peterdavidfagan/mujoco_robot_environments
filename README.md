@@ -12,14 +12,7 @@ pip install mujoco_robot_environments
 
 ### Local Development 
 
-Clone this GitHub repository and ensure all submodule are cloned with the following commands:
-
-```bash
-git submodule sync
-git submodule update --init --recursive
-```
-
-Ensure you have python version 3.10.6 using [pyenv](https://github.com/pyenv/pyenv). Following this install the python virtual environment for this project with [poetry](https://python-poetry.org/) through running:
+Clone this GitHub repository and ensure you have python version 3.10.6 using [pyenv](https://github.com/pyenv/pyenv). Following this install the python virtual environment for this project with [poetry](https://python-poetry.org/) through running:
 
 ```bash
 poetry install 
