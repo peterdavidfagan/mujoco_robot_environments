@@ -1,4 +1,4 @@
-"""Mujoco environment for interactive task learning."""
+"""Mujoco environment for rearranging objects into target locations."""
 from abc import abstractmethod
 from typing import Optional, Dict
 from copy import deepcopy
@@ -31,23 +31,37 @@ from mujoco_robot_environments.models.robot_arm import RobotArm
 def generate_default_config():
     hydra.core.global_hydra.GlobalHydra.instance().clear()
     initialize(version_base=None, config_path="../config", job_name="rearrangement")
-    return compose(
-            config_name="rearrangement",
-            overrides=[
-                "arena/props=colour_splitter",
-                "simulation_tuning_mode=False"
-                ]
-                          )
-                          
-DEFAULT_CONFIG = generate_default_config()
+    return 
+
+hydra.core.global_hydra.GlobalHydra.instance().clear()
+initialize(version_base=None, config_path="../config", job_name="rearrangement")
+
+DEFAULT_CONFIG = compose(
+                    config_name="rearrangement",
+                    overrides=[
+                        "arena/props=colour_splitter",
+                        "simulation_tuning_mode=False",
+                        ]
+                        )
+
+APPLE_CONFIG = compose(
+                    config_name="rearrangement",
+                    overrides=[
+                        "arena/props=apple",
+                        "task=apple",
+                        "simulation_tuning_mode=False",
+                        ]
+                        )
+
+
 
 class RearrangementEnv(dm_env.Environment):
-    """MuJoCo powered robotics environment with dm_env interface."""
+    """MuJoCo powered robotics environment for object rearrangement."""
 
     def __init__(
         self,
         viewer: Optional = None,
-        cfg: DictConfig = generate_default_config(),
+        cfg: DictConfig = DEFAULT_CONFIG,
     ):
         """Initializes the simulation environment from config."""
         # ensure mjcf paths are relative to this file
@@ -93,18 +107,19 @@ class RearrangementEnv(dm_env.Environment):
         )
         self._arena.attach(table, table_attach_site)
 
-        # add visuals for target locations
-        for key, value in cfg.task.target_locations.items():
-            self._arena.mjcf_model.worldbody.add(
-                'geom',
-                name=key,
-                type='box',
-                size=value["size"],  
-                rgba=value["rgba"],  
-                pos=value["location"],
-                contype=0,  # no collision with any object
-                conaffinity=0  # no influence on collision detection
-            )
+        # add visuals for target locations if specifed
+        if "target_locations" in cfg.task:
+            for key, value in cfg.task.target_locations.items():
+                self._arena.mjcf_model.worldbody.add(
+                    'geom',
+                    name=key,
+                    type='box',
+                    size=value["size"],  
+                    rgba=value["rgba"],  
+                    pos=value["location"],
+                    contype=0,  # no collision with any object
+                    conaffinity=0  # no influence on collision detection
+                )
 
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
@@ -118,7 +133,7 @@ class RearrangementEnv(dm_env.Environment):
         self._arena.attach(self.arm, robot_base_site)
 
 
-        # if debugging the task environment add mocap for controller eef
+        # if debugging the task environment add mocap for osc controller
         if cfg.simulation_tuning_mode:
             self.eef_target_mocap=self._arena.mjcf_model.worldbody.add(
                     'body',
@@ -779,16 +794,12 @@ if __name__=="__main__":
     initialize(version_base=None, config_path="../config", job_name="rearrangement")
     
     # add task configs
-    COLOR_SEPARATING_CONFIG = compose(
-            config_name="rearrangement",
-            overrides=[
-                "arena/props=colour_splitter",
-                "simulation_tuning_mode=True"
-                ]
-                )
+    DEFAULT_CONFIG['simulation_tuning_mode'] = True
+    APPLE_CONFIG['simulation_tuning_mode'] = True
+
 
     # instantiate color separation task
-    env = RearrangementEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
+    env = RearrangementEnv(viewer=True, cfg=APPLE_CONFIG) 
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()

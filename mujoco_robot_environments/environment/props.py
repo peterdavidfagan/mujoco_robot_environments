@@ -419,7 +419,6 @@ class GalaApple(Prop):
 
     @staticmethod
     def _make():
-        """Make a block model: the mjcf element, and site."""
         mjcf_root = mjcf.from_path(MJCFS['gala_apple'])
         return mjcf_root, None
 
@@ -436,13 +435,40 @@ class GalaApple(Prop):
         arena: composer.Arena,
         name: str = "gala_apple",
     ) -> composer.Entity:
-        """Add a block to the arena."""    
         # create apple and add to arena
         apple = GalaApple(name=name)
         frame = arena.add_free_entity(apple)
         apple.set_freejoint(frame.freejoint)
 
         return apple
+
+class Tray(Prop):
+    """Gala apple prop."""
+
+    @staticmethod
+    def _make():
+        mjcf_root = mjcf.from_path(MJCFS['tray'])
+        return mjcf_root, None
+
+    
+    def _build(  # pylint:disable=arguments-renamed
+        self,
+        name,
+    ) -> None:
+        mjcf_root, _ = self._make()
+        super()._build(name, mjcf_root, "model")
+
+    @staticmethod
+    def _add(
+        arena: composer.Arena,
+        name: str = "tray",
+    ) -> composer.Entity:
+        # create apple and add to arena
+        tray = Tray(name=name)
+        frame = arena.add_free_entity(tray)
+        tray.set_freejoint(frame.freejoint)
+
+        return tray
 
 def add_object(area: composer.Arena,
                name: str,

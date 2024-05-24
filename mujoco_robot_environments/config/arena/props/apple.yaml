@@ -2,5 +2,20 @@ min_objects: 2
 max_objects: 5
 min_object_size: 0.015
 max_object_size: 0.016
+sample_size: true
+sample_colour: true
+color_noise: 0.1
 shapes:
   - apple
+# below are not relevant for apple, review API such that they can be removed.
+colours:
+  - green
+  - blue
+  - red
+  - yellow 
+  - cyan 
+  - magenta
+textures:
+  - plain
+  - stary
+  - dotted
