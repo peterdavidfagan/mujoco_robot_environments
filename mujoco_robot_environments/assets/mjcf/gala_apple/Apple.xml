@@ -1,0 +1,21 @@
+<mujoco model="Apple">
+  <default>
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="sphere" size="0.065" euler="0 0 0"/>
+    </default>
+  </default>
+  <asset>
+    <texture type="2d" name="Apple1" file="Apple1.png"/>
+    <material name="material_0" texture="Apple1" specular="1.0" shininess="0.0"/>
+    <mesh file="Apple.obj" scale="0.00065 0.00065 0.00065"/>
+  </asset>
+  <worldbody>
+    <body name="Apple">
+      <geom material="material_0" mesh="Apple" class="visual"/>
+      <geom mesh="Apple" class="collision"/>
+    </body>
+  </worldbody>
+</mujoco>

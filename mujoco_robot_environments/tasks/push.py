@@ -40,7 +40,7 @@ def generate_default_config():
                 )
 
 
-class RearrangementEnv(dm_env.Environment):
+class PushEnv(dm_env.Environment):
     """MuJoCo powered robotics environment with dm_env interface."""
 
     def __init__(
@@ -379,7 +379,7 @@ if __name__=="__main__":
                 )
 
     # instantiate color separation task
-    env = RearrangementEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
+    env = PushEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()

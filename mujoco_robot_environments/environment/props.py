@@ -18,8 +18,8 @@ COLOURS= {
     "magenta": (1.0, 0.0, 1.0, 1.0),
 }
 
-TEXTURES = {}
 filepath = Path(__file__).resolve().parent.absolute()
+TEXTURES = {}
 TEXTURE_PATH = f"{filepath}/../assets/textures"
 for name in os.listdir(TEXTURE_PATH):
     textures = []
@@ -28,6 +28,16 @@ for name in os.listdir(TEXTURE_PATH):
         texture_path = os.path.join(textures_path, texture)
         textures.append(mjcf.Asset(utils.io.GetResource(texture_path), ".png"))
     TEXTURES[name] = textures
+
+MJCFS = {}
+MJCF_PATH = f"{filepath}/../assets/mjcf"
+for name in os.listdir(MJCF_PATH):
+    mjcf_path = os.path.join(MJCF_PATH, name)
+    for model in os.listdir(mjcf_path):
+        if model.endswith('.xml'):
+            model_path = os.path.join(mjcf_path, model)
+
+    MJCFS[name] = model_path
 
 # this prop class is take from dm_robotics: https://github.com/google-deepmind/dm_robotics/blob/main/py/moma/prop.py
 # the rest of this file is custom code
@@ -404,6 +414,36 @@ class Sphere(Prop):
         return sphere
 
 
+class GalaApple(Prop):
+    """Gala apple prop."""
+
+    @staticmethod
+    def _make():
+        """Make a block model: the mjcf element, and site."""
+        mjcf_root = mjcf.from_path(MJCFS['gala_apple'])
+        return mjcf_root, None
+
+    
+    def _build(  # pylint:disable=arguments-renamed
+        self,
+        name,
+    ) -> None:
+        mjcf_root, _ = self._make()
+        super()._build(name, mjcf_root, "Apple")
+
+    @staticmethod
+    def _add(
+        arena: composer.Arena,
+        name: str = "gala_apple",
+    ) -> composer.Entity:
+        """Add a block to the arena."""    
+        # create apple and add to arena
+        apple = GalaApple(name=name)
+        frame = arena.add_free_entity(apple)
+        apple.set_freejoint(frame.freejoint)
+
+        return apple
+
 def add_object(area: composer.Arena,
                name: str,
                shape: str,
@@ -456,6 +496,10 @@ def add_object(area: composer.Arena,
                            sample_size=sample_size,
                            sample_colour=sample_colour,
                            colour_noise=colour_noise)
+    
+    elif shape == "apple":
+        return GalaApple._add(area, 
+                              name,)
     else:
         raise ValueError(f"Unknown shape {shape}")
 

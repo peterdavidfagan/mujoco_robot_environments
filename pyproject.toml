@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mujoco_robot_environments"
-version = "0.0.1"
+version = "0.0.2"
 description = "Simulation environments for basic manipulation tasks."
 authors = [
 	{ name = "Peter David Fagan", email = "peterdavidfagan@gmail.com" }

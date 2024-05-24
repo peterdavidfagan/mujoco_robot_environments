@@ -1,0 +1,6 @@
+min_objects: 2
+max_objects: 5
+min_object_size: 0.015
+max_object_size: 0.016
+shapes:
+  - apple

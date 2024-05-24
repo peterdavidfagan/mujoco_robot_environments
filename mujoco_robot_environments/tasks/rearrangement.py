@@ -38,7 +38,8 @@ def generate_default_config():
                 "simulation_tuning_mode=False"
                 ]
                           )
-
+                          
+DEFAULT_CONFIG = generate_default_config()
 
 class RearrangementEnv(dm_env.Environment):
     """MuJoCo powered robotics environment with dm_env interface."""
@@ -788,26 +789,6 @@ if __name__=="__main__":
 
     # instantiate color separation task
     env = RearrangementEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
-
-    # expert demonstration
-    _, _, _, obs = env.reset()
-    while env.sort_colours()[0]:
-        _, pick_pose, place_pose = env.sort_colours()
-        
-        pick_action = {
-            "pose": pick_pose,
-            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", pick_pose[:3]),
-            "gripper_rot": None,
-        }
-
-        place_action = {
-            "pose": place_pose,
-            "pixel_coords": env.world_2_pixel("overhead_camera/overhead_camera", place_pose[:3]),
-            "gripper_rot": None,
-        }
-
-        _, _, _, obs = env.step(pick_action)
-        _, _, _, obs = env.step(place_action)
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()
