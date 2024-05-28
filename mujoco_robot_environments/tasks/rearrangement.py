@@ -28,11 +28,6 @@ from mujoco_robot_environments.environment.prop_initializer import PropPlacer
 from mujoco_robot_environments.models.robot_arm import RobotArm
 
 
-def generate_default_config():
-    hydra.core.global_hydra.GlobalHydra.instance().clear()
-    initialize(version_base=None, config_path="../config", job_name="rearrangement")
-    return 
-
 hydra.core.global_hydra.GlobalHydra.instance().clear()
 initialize(version_base=None, config_path="../config", job_name="rearrangement")
 
@@ -52,8 +47,6 @@ APPLE_CONFIG = compose(
                         "simulation_tuning_mode=False",
                         ]
                         )
-
-
 
 class RearrangementEnv(dm_env.Environment):
     """MuJoCo powered robotics environment for object rearrangement."""
