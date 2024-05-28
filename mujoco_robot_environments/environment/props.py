@@ -428,7 +428,7 @@ class GalaApple(Prop):
         name,
     ) -> None:
         mjcf_root, _ = self._make()
-        super()._build(name, mjcf_root, "Apple")
+        super()._build(name, mjcf_root, "gala_apple")
 
     @staticmethod
     def _add(
@@ -443,7 +443,7 @@ class GalaApple(Prop):
         return apple
 
 class Tray(Prop):
-    """Gala apple prop."""
+    """tray prop."""
 
     @staticmethod
     def _make():
