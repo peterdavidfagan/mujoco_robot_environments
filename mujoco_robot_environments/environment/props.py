@@ -47,7 +47,8 @@ class Prop(composer.Entity):
     def _build(self,
                 name: str,
                 mjcf_root: mjcf.RootElement,
-                prop_root: str = 'prop_root'):
+                prop_root: str = 'prop_root',
+                labels: list[str] = []):
         """Base constructor for props.
 
         This constructor sets up the common observables and element access
@@ -68,6 +69,7 @@ class Prop(composer.Entity):
         if self._prop_root is None:
             raise ValueError(f'model does not contain prop root {prop_root}.')
         self._freejoint = None  # type: mjcf.Element
+        self._labels = labels
 
     @property
     def name(self) -> str:
@@ -77,6 +79,10 @@ class Prop(composer.Entity):
     def mjcf_model(self) -> mjcf.RootElement:
         """Returns the `mjcf.RootElement` object corresponding to this prop."""
         return self._mjcf_root
+    
+    @property
+    def labels(self) -> list[str]:
+        return self._labels
 
     def set_pose(self, physics: mjcf.Physics, position: np.ndarray,  # pytype: disable=signature-mismatch  # overriding-parameter-count-checks
                 quaternion: np.ndarray) -> None:
@@ -197,6 +203,7 @@ class Rectangle(Prop):
         rgba: List,
         name: str = "box",
         texture: str = "plain",
+        labels: list[str] = [],
         x_len: float = 0.1,
         y_len: float = 0.1,
         z_len: float = 0.1,
@@ -221,7 +228,7 @@ class Rectangle(Prop):
                                           margin=margin,
                                           gap=gap,
                                           )
-        super()._build(name, mjcf_root, "prop_root")
+        super()._build(name, mjcf_root, "prop_root", labels)
         del site
 
     @staticmethod
@@ -230,6 +237,7 @@ class Rectangle(Prop):
         name: str = "red_rectangle_1",
         colour: str = "red",
         texture: str = "plain",
+        labels: list[str] = [],
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,     
         x_len: float = 0.04,
@@ -264,7 +272,8 @@ class Rectangle(Prop):
                               x_len=x_len,
                               y_len=y_len,
                               z_len=z_len,
-                              rgba=rgba)
+                              rgba=rgba,
+                              labels=labels)
         frame = arena.add_free_entity(rectangle)
         rectangle.set_freejoint(frame.freejoint)
 
@@ -298,23 +307,25 @@ class Cylinder(Prop):
                name: str = "cylinder",
                texture: str = "plain",
                radius: float = 0.025,
-               half_height: float = 0.1) -> None:
+               half_height: float = 0.1,
+               labels: list[str]=[]) -> None:
         """Build the prop."""
         mjcf_root, cylinder = Cylinder._make(name=name,
                                              radius=radius,
                                              texture = texture,
                                              half_height=half_height,
                                              rgba=rgba)
-        super()._build(name, mjcf_root, "prop_root")
+        super()._build(name, mjcf_root, "prop_root", labels)
         del cylinder
 
     
     @staticmethod
     def _add(
         arena: composer.Arena,
-        name: str = "red_cylinder_1",
+        name: str = "1",
         colour: str = "red",
         texture: str = "plain",
+        labels: list[str] = [],
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,     
         radius: float = 0.025,
@@ -341,7 +352,8 @@ class Cylinder(Prop):
                             radius=radius,
                             texture=texture,
                             half_height=half_height,
-                            rgba=rgba)
+                            rgba=rgba,
+                            labels=labels)
 
         frame = arena.add_free_entity(cylinder)
         cylinder.set_freejoint(frame.freejoint)
@@ -374,21 +386,23 @@ class Sphere(Prop):
                rgba: List,
                name: str = "sphere",
                texture: str = "plain",
-               radius: float = 0.5) -> None:
+               radius: float = 0.5,
+               labels: list[str]=[]) -> None:
         """Build the prop."""
         mjcf_root, sphere = Sphere._make(name=name,
                                          texture=texture,
                                          radius=radius,
                                          rgba=rgba)
-        super()._build(name, mjcf_root, "prop_root")
+        super()._build(name, mjcf_root, "prop_root", labels)
         del sphere
 
     @staticmethod
     def _add(
         arena: composer.Arena,
-        name: str = "red_sphere_1",
+        name: str = "1",
         colour: str = "red",
         texture: str = "plain",
+        labels: list[str] = [],
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,          
         radius: float = 0.025,
@@ -408,7 +422,11 @@ class Sphere(Prop):
             rgba[3] = 1.0
 
         # create sphere and add to arena
-        sphere = Sphere(name=name, texture=texture, radius=radius, rgba=rgba)
+        sphere = Sphere(name=name,
+                        texture=texture,
+                        radius=radius,
+                        rgba=rgba,
+                        labels=labels)
         frame = arena.add_free_entity(sphere)
         sphere.set_freejoint(frame.freejoint)
         return sphere
@@ -475,17 +493,20 @@ def add_object(area: composer.Arena,
                shape: str,
                colour: str,
                texture:str,
-               min_object_size: float,
-               max_object_size: float,
+               labels: list[str] = None,
+               min_object_size: float = 0.02,
+               max_object_size: float = 0.05,
                sample_size: bool = False,
                sample_colour: bool = False,
-               colour_noise: float=0.1) -> composer.Entity:
+               colour_noise: float=0.1,) -> composer.Entity:
     """Add an object to the arena based on the shape and colour."""
+    print(f"name: {name}, shape: {shape}, colour: {colour}, texture: {texture}, labels: {labels}")
     if shape == "cube":
         return Rectangle._add(area,
                               name,
                               colour,
                               texture,
+                              labels,
                               min_object_size,
                               max_object_size,                             
                               is_cube=True,
@@ -497,6 +518,7 @@ def add_object(area: composer.Arena,
                               name,
                               colour,
                               texture,
+                              labels,
                               min_object_size,
                               max_object_size,           
                               sample_size=sample_size,
@@ -507,6 +529,7 @@ def add_object(area: composer.Arena,
                              name,
                              colour,
                              texture,
+                             labels,
                              min_object_size,
                              max_object_size,          
                              sample_size=sample_size,
@@ -517,6 +540,7 @@ def add_object(area: composer.Arena,
                            name,
                            colour,
                            texture,
+                           labels,
                            min_object_size,
                            max_object_size,          
                            sample_size=sample_size,
@@ -566,12 +590,14 @@ def add_objects(
         texture = "plain" # for now fix to plain
         #random.choice(textures)
     
-        name = f"{texture}_{colour}_{shape}_{i}"
+        name = f"prop_{i}"
+        labels = [shape, colour, texture]
         obj = add_object(arena,
                          name,
                          shape,
                          colour,
                          texture,
+                         labels,
                          min_object_size,
                          max_object_size,
                          sample_size,

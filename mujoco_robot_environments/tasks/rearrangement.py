@@ -231,15 +231,22 @@ class RearrangementEnv(dm_env.Environment):
        
        The domain model is a dictionary of objects and their properties.
        """
-       shapes = self._cfg.arena.props.shapes
+       keywords = self._cfg.arena.props.shapes + ["prop"]
 
        # get prop object names
        prop_names = [
            self._physics.model.id2name(i, "geom")
            for i in range(self._physics.model.ngeom)
-           if any(keyword in self._physics.model.id2name(i, "geom") for keyword in shapes)
+           if any(keyword in self._physics.model.id2name(i, "geom") for keyword in keywords)
        ]
        prop_ids = [self._physics.model.name2id(name, "geom") for name in prop_names]
+
+    #    print(prop_names)
+    #    print(prop_ids)
+    #    print(self._physics.model.ngeom)
+    #    print([self._physics.model.id2name(i, "geom") for i in range(self._physics.model.ngeom)])
+    #    print([(prop.name, prop.labels) for prop in self.props])
+    #    exit()
 
        # get object information
        prop_positions = self._physics.named.data.geom_xpos[prop_names]
@@ -247,6 +254,8 @@ class RearrangementEnv(dm_env.Environment):
        prop_orientations = [R.from_matrix(mat.reshape((3, 3))).as_quat() for mat in prop_orientations]
        prop_rgba = self._physics.named.model.geom_rgba[prop_names]
        prop_names = [name.split("/")[0] for name in prop_names]
+       prop_labels = [prop.labels for prop in self.props]
+
 
        # get object bounding box information
        def get_bbox(prop_id, segmentation_map):
@@ -279,9 +288,8 @@ class RearrangementEnv(dm_env.Environment):
            bbox = get_bbox(idx, segmentation_map)
            prop_bbox.append(bbox)
 
-       # extacting entity id and symbols from prop names
+       # extacting entity id
        entities = [prop_name.split("_")[-1] for prop_name in prop_names]
-       symbols = [prop_name.split("_")[:-1] for prop_name in prop_names]
 
        # create a dictionary with all the data
        props_info = {
@@ -291,7 +299,7 @@ class RearrangementEnv(dm_env.Environment):
                "orientation": prop_orientations[i],
                "rgba": prop_rgba[i],
                "bbox": prop_bbox[i],
-               "symbols": symbols[i],
+               "symbols": prop_labels[i],
            }
            for i, entity in enumerate(entities)  
        }
