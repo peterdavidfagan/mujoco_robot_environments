@@ -500,7 +500,6 @@ def add_object(area: composer.Arena,
                sample_colour: bool = False,
                colour_noise: float=0.1,) -> composer.Entity:
     """Add an object to the arena based on the shape and colour."""
-    print(f"name: {name}, shape: {shape}, colour: {colour}, texture: {texture}, labels: {labels}")
     if shape == "cube":
         return Rectangle._add(area,
                               name,
