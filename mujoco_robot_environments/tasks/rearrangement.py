@@ -241,6 +241,13 @@ class RearrangementEnv(dm_env.Environment):
        ]
        prop_ids = [self._physics.model.name2id(name, "geom") for name in prop_names]
 
+    #    print(prop_names)
+    #    print(prop_ids)
+    #    print(self._physics.model.ngeom)
+    #    print([self._physics.model.id2name(i, "geom") for i in range(self._physics.model.ngeom)])
+    #    print([(prop.name, prop.labels) for prop in self.props])
+    #    exit()
+
        # get object information
        prop_positions = self._physics.named.data.geom_xpos[prop_names]
        prop_orientations = self._physics.named.data.geom_xmat[prop_names]
@@ -278,10 +285,6 @@ class RearrangementEnv(dm_env.Environment):
        for idx in prop_ids:
            bbox = get_bbox(idx, segmentation_map)
            prop_bbox.append(bbox)
-
-       # extacting entity id and symbols from prop names
-       symbols = [prop_name.split("_")[:-1] for prop_name in prop_names]
-
 
        # create a dictionary with all the data
        props_info = {
