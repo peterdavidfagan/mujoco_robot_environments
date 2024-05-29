@@ -792,7 +792,7 @@ if __name__=="__main__":
 
 
     # instantiate color separation task
-    env = RearrangementEnv(viewer=True, cfg=APPLE_CONFIG) 
+    env = RearrangementEnv(viewer=True, cfg=DEFAULT_CONFIG) 
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()
