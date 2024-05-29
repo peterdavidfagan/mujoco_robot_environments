@@ -523,53 +523,51 @@ def add_object(area: composer.Arena,
                sample_colour: bool = False,
                colour_noise: float=0.1,) -> composer.Entity:
     """Add an object to the arena based on the shape and colour."""
-
-    match shape:
-        case "cube":
-            return Rectangle._add(area,
-                                name,
-                                colour,
-                                texture,
-                                labels,
-                                min_object_size,
-                                max_object_size,                             
-                                is_cube=True,
-                                sample_size=sample_size,
-                                sample_colour=sample_colour,
-                                colour_noise=colour_noise)
-        case "rectangle":
-            return Rectangle._add(area,
-                                name,
-                                colour,
-                                texture,
-                                labels,
-                                min_object_size,
-                                max_object_size,           
-                                sample_size=sample_size,
-                                sample_colour=sample_colour,
-                                colour_noise=colour_noise)
-        case "cylinder":
-            return Cylinder._add(area,
-                                name,
-                                colour,
-                                texture,
-                                labels,
-                                min_object_size,
-                                max_object_size,          
-                                sample_size=sample_size,
-                                sample_colour=sample_colour,
-                                colour_noise=colour_noise)
-        case "sphere":
-            return Sphere._add(area,
-                            name,
-                            colour,
-                            texture,
-                            labels,
-                            min_object_size,
-                            max_object_size,          
-                            sample_size=sample_size,
-                            sample_colour=sample_colour,
-                            colour_noise=colour_noise)
+    if shape == "cube":
+        return Rectangle._add(area,
+                              name,
+                              colour,
+                              texture,
+                              labels,
+                              min_object_size,
+                              max_object_size,                             
+                              is_cube=True,
+                              sample_size=sample_size,
+                              sample_colour=sample_colour,
+                              colour_noise=colour_noise)
+    elif shape == "rectangle":
+        return Rectangle._add(area,
+                              name,
+                              colour,
+                              texture,
+                              labels,
+                              min_object_size,
+                              max_object_size,           
+                              sample_size=sample_size,
+                              sample_colour=sample_colour,
+                              colour_noise=colour_noise)
+    elif shape == "cylinder":
+        return Cylinder._add(area,
+                             name,
+                             colour,
+                             texture,
+                             labels,
+                             min_object_size,
+                             max_object_size,          
+                             sample_size=sample_size,
+                             sample_colour=sample_colour,
+                             colour_noise=colour_noise)
+    elif shape == "sphere":
+        return Sphere._add(area,
+                           name,
+                           colour,
+                           texture,
+                           labels,
+                           min_object_size,
+                           max_object_size,          
+                           sample_size=sample_size,
+                           sample_colour=sample_colour,
+                           colour_noise=colour_noise)
     
         case "apple":
             return GalaApple._add(area, 
