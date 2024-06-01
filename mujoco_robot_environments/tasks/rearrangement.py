@@ -287,7 +287,7 @@ class RearrangementEnv(dm_env.Environment):
                "orientation": prop_orientations[i],
                "rgba": prop_rgba[i],
                "bbox": prop_bbox[i],
-               "symbols": prop_labels[i],
+               "labels": prop_labels[i],
            }
            for i, entity in enumerate(prop_ids)  
        }
@@ -729,7 +729,7 @@ class RearrangementEnv(dm_env.Environment):
         for prop_id, attributes in self.props_info.items():
             prop_pos = attributes["position"]
             prop_name = attributes["prop_name"]
-            prop_colour = prop_name.split("_")[1]
+            prop_colour = attributes["labels"].colour
 
             # check if prop is within bounds of target location
             target_location_name = self._cfg.task.colour_target_map[prop_colour]
