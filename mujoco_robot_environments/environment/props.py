@@ -1,5 +1,6 @@
 """A script for defining props."""
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 import random
 from typing import Dict, Sequence, Tuple, List
@@ -39,6 +40,28 @@ for name in os.listdir(MJCF_PATH):
 
     MJCFS[name] = model_path
 
+@dataclass
+class PropsLabels:
+    """Container for prop labels."""
+    data: dict = field(default_factory=dict)
+    default_values: dict = field(default_factory=lambda: {"texture": "plain"})
+    
+    def __post_init__(self):
+        # Set default values
+        for key, value in self.default_values.items():
+            setattr(self, key, value)
+        
+        # Override with values from the input dictionary
+        for key, value in self.data.items():
+            setattr(self, key, value)
+
+    def __str__(self):
+        attrs = ', '.join(f"{key}='{value}'" for key, value in self.__dict__.items() if key not in {'data', 'default_values'})
+        return f"PropsLabels({attrs})"
+
+    def __repr__(self):
+        return self.__str__()
+    
 # this prop class is take from dm_robotics: https://github.com/google-deepmind/dm_robotics/blob/main/py/moma/prop.py
 # the rest of this file is custom code
 class Prop(composer.Entity):
@@ -48,7 +71,7 @@ class Prop(composer.Entity):
                 name: str,
                 mjcf_root: mjcf.RootElement,
                 prop_root: str = 'prop_root',
-                labels: list[str] = []):
+                labels: PropsLabels = PropsLabels()) -> None:
         """Base constructor for props.
 
         This constructor sets up the common observables and element access
@@ -81,7 +104,7 @@ class Prop(composer.Entity):
         return self._mjcf_root
     
     @property
-    def labels(self) -> list[str]:
+    def labels(self) -> PropsLabels:
         return self._labels
 
     def set_pose(self, physics: mjcf.Physics, position: np.ndarray,  # pytype: disable=signature-mismatch  # overriding-parameter-count-checks
@@ -203,7 +226,7 @@ class Rectangle(Prop):
         rgba: List,
         name: str = "box",
         texture: str = "plain",
-        labels: list[str] = [],
+        labels: PropsLabels = PropsLabels(),
         x_len: float = 0.1,
         y_len: float = 0.1,
         z_len: float = 0.1,
@@ -237,7 +260,7 @@ class Rectangle(Prop):
         name: str = "red_rectangle_1",
         colour: str = "red",
         texture: str = "plain",
-        labels: list[str] = [],
+        labels: PropsLabels = PropsLabels(),
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,     
         x_len: float = 0.04,
@@ -308,7 +331,7 @@ class Cylinder(Prop):
                texture: str = "plain",
                radius: float = 0.025,
                half_height: float = 0.1,
-               labels: list[str]=[]) -> None:
+               labels: PropsLabels = PropsLabels()) -> None:
         """Build the prop."""
         mjcf_root, cylinder = Cylinder._make(name=name,
                                              radius=radius,
@@ -325,7 +348,7 @@ class Cylinder(Prop):
         name: str = "1",
         colour: str = "red",
         texture: str = "plain",
-        labels: list[str] = [],
+        labels: PropsLabels = PropsLabels(),
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,     
         radius: float = 0.025,
@@ -402,7 +425,7 @@ class Sphere(Prop):
         name: str = "1",
         colour: str = "red",
         texture: str = "plain",
-        labels: list[str] = [],
+        labels: PropsLabels = PropsLabels(),
         min_object_size: float = 0.02,
         max_object_size: float = 0.05,          
         radius: float = 0.025,
@@ -493,64 +516,66 @@ def add_object(area: composer.Arena,
                shape: str,
                colour: str,
                texture:str,
-               labels: list[str] = None,
+               labels: PropsLabels,
                min_object_size: float = 0.02,
                max_object_size: float = 0.05,
                sample_size: bool = False,
                sample_colour: bool = False,
                colour_noise: float=0.1,) -> composer.Entity:
     """Add an object to the arena based on the shape and colour."""
-    if shape == "cube":
-        return Rectangle._add(area,
-                              name,
-                              colour,
-                              texture,
-                              labels,
-                              min_object_size,
-                              max_object_size,                             
-                              is_cube=True,
-                              sample_size=sample_size,
-                              sample_colour=sample_colour,
-                              colour_noise=colour_noise)
-    elif shape == "rectangle":
-        return Rectangle._add(area,
-                              name,
-                              colour,
-                              texture,
-                              labels,
-                              min_object_size,
-                              max_object_size,           
-                              sample_size=sample_size,
-                              sample_colour=sample_colour,
-                              colour_noise=colour_noise)
-    elif shape == "cylinder":
-        return Cylinder._add(area,
-                             name,
-                             colour,
-                             texture,
-                             labels,
-                             min_object_size,
-                             max_object_size,          
-                             sample_size=sample_size,
-                             sample_colour=sample_colour,
-                             colour_noise=colour_noise)
-    elif shape == "sphere":
-        return Sphere._add(area,
-                           name,
-                           colour,
-                           texture,
-                           labels,
-                           min_object_size,
-                           max_object_size,          
-                           sample_size=sample_size,
-                           sample_colour=sample_colour,
-                           colour_noise=colour_noise)
+
+    match shape:
+        case "cube":
+            return Rectangle._add(area,
+                                name,
+                                colour,
+                                texture,
+                                labels,
+                                min_object_size,
+                                max_object_size,                             
+                                is_cube=True,
+                                sample_size=sample_size,
+                                sample_colour=sample_colour,
+                                colour_noise=colour_noise)
+        case "rectangle":
+            return Rectangle._add(area,
+                                name,
+                                colour,
+                                texture,
+                                labels,
+                                min_object_size,
+                                max_object_size,           
+                                sample_size=sample_size,
+                                sample_colour=sample_colour,
+                                colour_noise=colour_noise)
+        case "cylinder":
+            return Cylinder._add(area,
+                                name,
+                                colour,
+                                texture,
+                                labels,
+                                min_object_size,
+                                max_object_size,          
+                                sample_size=sample_size,
+                                sample_colour=sample_colour,
+                                colour_noise=colour_noise)
+        case "sphere":
+            return Sphere._add(area,
+                            name,
+                            colour,
+                            texture,
+                            labels,
+                            min_object_size,
+                            max_object_size,          
+                            sample_size=sample_size,
+                            sample_colour=sample_colour,
+                            colour_noise=colour_noise)
     
-    elif shape == "apple":
-        return GalaApple._add(area, 
-                              name,)
-    else:
-        raise ValueError(f"Unknown shape {shape}")
+        case "apple":
+            return GalaApple._add(area, 
+                                name,)
+        case _ :
+            raise ValueError(f"Unknown shape {shape}")
 
 def add_objects(
     arena: composer.Arena,
@@ -590,7 +615,11 @@ def add_objects(
         #random.choice(textures)
     
         name = f"prop_{i}"
-        labels = [shape, colour, texture]
+        labels = PropsLabels({
+            "shape": shape,
+            "colour": colour,
+            "texture": texture,
+        })
         obj = add_object(arena,
                          name,
                          shape,
