@@ -263,9 +263,9 @@ class RearrangementEnv(dm_env.Environment):
                    np.max(prop_coords[:, 1]),
                 ]
                 )
-           except Exception as e:
-                print(e)
-                print("prop_id: ", prop_id)
+           except:
+                print("prop_id is out of camera view: ", prop_id)
+                return np.array([])
 
            return bbox_corners
 
@@ -280,7 +280,6 @@ class RearrangementEnv(dm_env.Environment):
            prop_bbox.append(bbox)
 
        # extacting entity id and symbols from prop names
-       entities = [prop_name.split("_")[-1] for prop_name in prop_names]
        symbols = [prop_name.split("_")[:-1] for prop_name in prop_names]
 
        # create a dictionary with all the data
@@ -293,7 +292,7 @@ class RearrangementEnv(dm_env.Environment):
                "bbox": prop_bbox[i],
                "symbols": symbols[i],
            }
-           for i, entity in enumerate(entities)  
+           for i, entity in enumerate(prop_ids)  
        }
 
        return props_info
@@ -600,11 +599,13 @@ class RearrangementEnv(dm_env.Environment):
 
     def prop_place(self, prop_id, min_pose=None, max_pose=None):
         """Returns collision free place pose for a given prop."""
+        # get prop name from id
+        prop_name = mj_id2name(self._physics.model.ptr, 5, int(prop_id)).split("/")[0]
+        
         # don't want to mess with actual physics
         dummy_physics = deepcopy(self._physics)
-        prop_name = f"{prop_id}/{prop_id}"
-        prop_mjcf = [x for x in self.props if x.name == prop_id][0]
-        prop = dummy_physics.model.geom(prop_name)
+        prop_mjcf = [x for x in self.props if x.name == prop_name][0]
+        prop = dummy_physics.model.geom(f"{prop_name}/{prop_name}")
         
         # workspace bounds for place
         if (min_pose is None) and (max_pose is None):
@@ -743,7 +744,7 @@ class RearrangementEnv(dm_env.Environment):
                 
                 # sample collision-free place pose within target
                 min_pose, max_pose = get_location_bounds(target_location)
-                place_pose = self.prop_place(prop_name, min_pose, max_pose)
+                place_pose = self.prop_place(prop_id, min_pose, max_pose)
 
                 return True, pick_pose, place_pose
             else:
