@@ -731,6 +731,7 @@ class RearrangementEnv(dm_env.Environment):
             prop_name = attributes["prop_name"]
             prop_colour = attributes["labels"].colour
 
+
             # check if prop is within bounds of target location
             target_location_name = self._cfg.task.colour_target_map[prop_colour]
             target_location = self._cfg.task.target_locations[target_location_name]

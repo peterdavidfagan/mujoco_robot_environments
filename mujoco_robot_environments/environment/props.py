@@ -569,11 +569,11 @@ def add_object(area: composer.Arena,
                            sample_colour=sample_colour,
                            colour_noise=colour_noise)
     
-        case "apple":
-            return GalaApple._add(area, 
-                                name,)
-        case _ :
-            raise ValueError(f"Unknown shape {shape}")
+    elif shape == "apple":
+        return GalaApple._add(area, 
+                            name,)
+    else:
+        raise ValueError(f"Unknown shape {shape}")
 
 def add_objects(
     arena: composer.Arena,
