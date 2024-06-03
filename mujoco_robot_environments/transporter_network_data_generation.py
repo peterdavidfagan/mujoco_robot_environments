@@ -27,11 +27,10 @@ COLOR_SEPERATOR_TASK_CONFIG = compose(
         config_name="rearrangement",
         overrides=[
             "+name=colour_splitter",
-            "arena/props=colour_splitter"
+            "task=rearrangement_w_targets",
+            "arena/props=colour_splitter",
             ]
         )
-
-#COLOR_SEPERATOR_TASK_CONFIG.name = "colour_splitter"
 
 if __name__=="__main__":
     
@@ -98,7 +97,7 @@ if __name__=="__main__":
         episode_idx=0
         while (task_config.dataset.num_episodes - episode_idx>=0):
             # instantiate task environment
-            env = RearrangementEnv(task_config)
+            env = RearrangementEnv(cfg=task_config, viewer=False)
             
             # collect data with envlogger
             with envlogger.EnvLogger(

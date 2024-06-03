@@ -1,0 +1,58 @@
+# initializers for robot and props
+initializers:
+  seed: 1
+  workspace:
+    min_pose: [0.35, -0.4, 0.43]
+    max_pose: [0.55, 0.4, 0.435]
+  gripper:
+    min_pose: [0.4, -0.0, 0.7, 3.14, 0.0, 0.0]
+    max_pose: [0.5, 0.0, 0.7, 3.14, 0.0, 0.0]
+
+# locations of target zones 
+target_locations:
+  top_left:
+    name: "top_left"
+    location: [0.55, 0.4, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [1.0, 0.0, 0.0, 0.1] 
+
+  bottom_left:
+    name: "bottom_left"
+    location: [0.35, 0.4, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [0.0, 1.0, 0.0, 0.1] 
+
+  top_right:
+    name: "top_right"
+    location: [0.55, -0.4, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [0.0, 0.0, 1.0, 0.1]  
+
+  bottom_right:
+    name: "bottom_right"
+    location: [0.35, -0.4, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [1.0, 1.0, 0.0, 0.1] 
+
+  top_middle:
+    name: "top_middle"
+    location: [0.55, 0.0, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [1.0, 0.0, 1.0, 0.1]  
+
+  bottom_middle:
+    name: "bottom_middle"
+    location: [0.35, 0.0, 0.4]
+    size: [0.075, 0.15, 0.01] 
+    rgba: [0.0, 1.0, 1.0, 0.1]  
+
+# mapping of colour name to target location
+colour_target_map:
+  red: "top_left"
+  green: "bottom_left"
+  blue: "top_right"
+  yellow: "bottom_right"
+  magenta: "top_middle"
+  cyan: "bottom_middle"
+
+  
