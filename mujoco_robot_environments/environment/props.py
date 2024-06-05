@@ -180,9 +180,9 @@ class Rectangle(Prop):
         z_len: float = 0.1,
         rgba: Tuple[float, float, float,float]=(1, 0, 0, 1),
         texture: str = "plain",
-        friction: Tuple[float, float, float]=(1, 0.005, 0.0001),
+        friction: Tuple[float, float, float]=(1, 1, 1),
         solimp: Tuple[float, float, float]=(0.95, 0.995, 0.001, 0.5, 3),
-        solref: Tuple[float, float, float]=(0.04, 1.1),
+        solref: Tuple[float, float, float]=(0.01, 1.1),
         mass: float = 0.15,
         margin: float = 0.15,
         gap: float = 0.15,
@@ -200,12 +200,13 @@ class Rectangle(Prop):
             size=(x_len, y_len, z_len),
             solref=solref,
             solimp=solimp,
-            condim=3,
+            condim=6,
             rgba=rgba,
             mass = mass,
             friction = friction,
             margin = margin,
             gap = gap,
+            priority=10,
         )
         site = prop_root.add(
             "site",
@@ -231,9 +232,9 @@ class Rectangle(Prop):
         y_len: float = 0.1,
         z_len: float = 0.1,
         pos=(0.0, 0.0, 0.0),
-        friction: Tuple[float, float, float]=(1, 0.005, 0.0001),
+        friction: Tuple[float, float, float]=(1, 1, 1),
         solimp: Tuple[float, float, float]=(0.95, 0.995, 0.001),
-        solref: Tuple[float, float, float]=(0.002, 0.7),
+        solref: Tuple[float, float, float]=(0.01, 1.1),
         mass: float = 0.1,
         margin: float = 0.15,
         gap: float = 0.15,
@@ -320,7 +321,11 @@ class Cylinder(Prop):
                                  material=Prop._make_material(texture, mjcf_root),
                                  size=(radius, half_height),
                                  rgba=rgba,
-                                 #mass=50
+                                 mass=0.1,
+                                condim=6,
+                                solref=(0.01, 1.1),
+                                friction=(1, 1, 1),
+                                priority = 10,
                                  )
 
         return mjcf_root, cylinder
@@ -400,7 +405,7 @@ class Sphere(Prop):
                                pos=(0, 0, 0),
                                size=(radius,),
                                rgba=rgba,
-                               #mass=50,
+                               mass=0.1,
                                )
 
         return mjcf_root, sphere
