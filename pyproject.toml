@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mujoco_robot_environments"
-version = "0.0.7"
+version = "0.0.8"
 description = "Simulation environments for basic manipulation tasks."
 authors = [
 	{ name = "Peter David Fagan", email = "peterdavidfagan@gmail.com" }
@@ -13,7 +13,7 @@ readme = "README.md"
 
 [tool.poetry]
 name = "mujoco_robot_environments"
-version = "0.0.7"
+version = "0.0.8"
 description = "Simulation environments for basic manipulation tasks."
 license = "Apache-2.0"
 authors = [
@@ -30,6 +30,9 @@ packages = [
 
 [tool.setuptools]
 py-modules=["mujoco_robot_environments"]
+
+[tool.setuptools.package-data]
+mujoco_robot_environments = ['*.png']
 
 [tool.poetry.dependencies]
 python = "3.10.6"
