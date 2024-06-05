@@ -614,7 +614,7 @@ def add_objects(
         else:
             colour = colours[i]
 
-        random.choice(textures)
+        texture = random.choice(textures)
     
         name = f"prop_{i}"
         labels = PropsLabels({
