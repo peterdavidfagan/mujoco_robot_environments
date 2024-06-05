@@ -257,10 +257,10 @@ class RearrangementEnv(dm_env.Environment):
            try:
                bbox_corners = np.array(
                 [
-                   np.min(prop_coords[:, 0]),
                    np.min(prop_coords[:, 1]),
-                   np.max(prop_coords[:, 0]),
+                   np.min(prop_coords[:, 0]),
                    np.max(prop_coords[:, 1]),
+                   np.max(prop_coords[:, 0]),
                 ]
                 )
            except:
