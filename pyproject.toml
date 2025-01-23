@@ -37,7 +37,7 @@ mujoco_robot_environments = ['*.png']
 [tool.poetry.dependencies]
 python = "3.10.6"
 numpy = "^1.16.0"
-mujoco = "^3.1.1"
+mujoco = "3.2.1"
 mujoco_controllers = "^0.0.2" 
 brax = "^0.10.4"
 dm-control = "1.0.22"
