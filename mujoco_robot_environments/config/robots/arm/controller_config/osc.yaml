@@ -4,8 +4,8 @@ controller_params:
   control_dt: ${control_dt}
   gains:
     position:
-      kp: 250.0
-      kd: 30.0
+      kp: 350.0
+      kd: 20.0
     orientation:
       kp: 500.0
       kd: 100.0

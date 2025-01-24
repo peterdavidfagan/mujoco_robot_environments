@@ -27,6 +27,7 @@ from mujoco_robot_environments.environment.cameras import add_camera
 from mujoco_robot_environments.environment.prop_initializer import PropPlacer
 from mujoco_robot_environments.models.robot_arm import RobotArm
 
+import h5py
 
 def generate_default_config():
     hydra.core.global_hydra.GlobalHydra.instance().clear()
@@ -40,7 +41,7 @@ def generate_default_config():
                 )
 
 
-class PushEnv(dm_env.Environment):
+class LasaDrawEnv(dm_env.Environment):
     """MuJoCo powered robotics environment with dm_env interface."""
 
     def __init__(
@@ -134,7 +135,7 @@ class PushEnv(dm_env.Environment):
                 conaffinity=0  # no influence on collision detection
                 )
             
-        # visualise plane for drawing
+        # add a plane for drawing task
         self.draw_plane_center=self._arena.mjcf_model.worldbody.add(
                 'body',
                 name="draw_plane",
@@ -305,17 +306,17 @@ class PushEnv(dm_env.Environment):
             if self.passive_view is not None:
                 self.passive_view.sync()
     
-    def test_board(self, target_position):
+    def move_to_draw_target(self, target_position, target_velocity):
         """
-        Interactively control arm to tune simulation parameters. 
+        Move to position and velocity target for drawing task. 
         """
         mocap_quat = self._physics.data.mocap_quat[0]
 
         # update control target
         self._robot.arm_controller.set_target(
-            position=target_position + [0.0, 0.0, 0.1],
+            position=target_position + [0.0, 0.0, 0.1], # account for height of toolpiece
             quat=mocap_quat, 
-            velocity=np.zeros(3),
+            velocity=target_velocity,
             angular_velocity=np.zeros(3),
             )
 
@@ -327,6 +328,9 @@ class PushEnv(dm_env.Environment):
             self._physics.step()
             if self.passive_view is not None:
                 self.passive_view.sync()
+
+        # return joint data for recording
+        return self._physics.bind(self._robot.arm_joints).qpos, self._physics.bind(self._robot.arm_joints).qvel
 
 
 if __name__=="__main__":
@@ -346,26 +350,11 @@ if __name__=="__main__":
                 )
 
     # instantiate color separation task
-    env = PushEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
-    positions = [
-        np.array([0.6, 0.3, 0.55]),
-        np.array([0.6, -0.3, 0.55]),
-        np.array([0.3, -0.3, 0.55]),
-        np.array([0.3, 0.3, 0.55]),
-        np.array([0.6, -0.3, 0.55]),
-    ]
+    env = LasaDrawEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()
-    for target in positions:
-        while True:
-            env.test_board(target)
-        
-            # check if target is reached
-            if env._robot.arm_controller.current_position_error() < 1e-3:
-                break
-
-        # env.interactive_tuning()
-
+    while True:
+        env.interactive_tuning()
     env.close()
     

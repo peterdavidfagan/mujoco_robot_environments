@@ -1,0 +1,3 @@
+[submodule "mujoco_robot_environments/mujoco_controllers"]
+	path = mujoco_robot_environments/mujoco_controllers
+	url = git@github.com:peterdavidfagan/mujoco_controllers.git
