@@ -38,7 +38,8 @@ class RobotArm(abc.ABC):
     self.eef_site = arm.attachment_site
     self.arm_joints = arm.joints
     self.arm_joint_ids = np.array(physics.bind(self.arm_joints).dofadr)
-    
+    self.arm_actuators = arm.actuators
+
     # set gripper and controller
     if gripper is not None:
       self.end_effector = gripper

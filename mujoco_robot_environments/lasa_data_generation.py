@@ -55,16 +55,17 @@ if __name__=="__main__":
     data = {}
     for demo_idx, demo in enumerate(demos):
         positions, velocities = preprocess_demo(demo)
-        joint_positions, joint_velocities = [], []
+        joint_positions, joint_velocities, joint_torques = [], [], []
         data[f"trajectory_{demo_idx}"] = {}
 
         for idx, (target_pos, target_vel) in enumerate(zip(positions, velocities)):
             while True:
-                pos, vel = env.move_to_draw_target(target_pos, target_vel)
+                pos, vel, torque = env.move_to_draw_target(target_pos, target_vel)
 
                 if idx != 0: 
                     joint_positions.append(pos)
                     joint_velocities.append(vel)
+                    joint_torques.append(torque)
 
                 # check if target is reached
                 if env._robot.arm_controller.current_position_error() < 5e-3:
@@ -81,9 +82,10 @@ if __name__=="__main__":
                         rgba=[1, 0, 0, 1]
                     )
                     env.passive_view.sync()
-                         
+                
         data[f"trajectory_{demo_idx}"]["joint_positions"] = np.vstack(joint_positions)
         data[f"trajectory_{demo_idx}"]["joint_velocities"] = np.vstack(joint_velocities)
+        data[f"trajectory_{demo_idx}"]["joint_torques"] = np.vstack(joint_torques)
     
     # Save to HDF5
     with h5py.File("robot_trajectories.h5", "w") as f:
@@ -91,6 +93,7 @@ if __name__=="__main__":
             group = f.create_group(traj_name)
             group.create_dataset("position", data=data["joint_positions"], compression="gzip")
             group.create_dataset("velocity", data=data["joint_velocities"], compression="gzip")
+            group.create_dataset("torque", data=data["joint_torques"], compression="gzip")
             
     env.close()
     

@@ -194,16 +194,19 @@ class LasaDrawEnv(dm_env.Environment):
     def data(self) -> mujoco.MjData:
         return self.physics.data
         
-    def reset(self) -> dm_env.TimeStep:
+    def reset(self, arm_configuration = None) -> dm_env.TimeStep:
         """Resets the environment to an initial state and returns the first
         `TimeStep` of the new episode.
         """
-        # reset the lation instance
+        if arm_configuration is None:
+            arm_configuration = self.arm.named_configurations["home"]
+
+        # reset the simulation instance
         self._physics.reset()
         
         # reset arm to home position
         # Note: for other envs we may want random sampling of initial arm positions
-        self.arm.set_joint_angles(self._physics, self.arm.named_configurations["home"])
+        self.arm.set_joint_angles(self._physics, arm_configuration)
         print(self.arm.named_configurations["home"])
 
         # configure viewer
@@ -330,7 +333,20 @@ class LasaDrawEnv(dm_env.Environment):
                 self.passive_view.sync()
 
         # return joint data for recording
-        return self._physics.bind(self._robot.arm_joints).qpos, self._physics.bind(self._robot.arm_joints).qvel
+        return self._physics.bind(self._robot.arm_joints).qpos.copy(), self._physics.bind(self._robot.arm_joints).qvel.copy(), self._physics.bind(self._robot.arm_actuators).ctrl.copy()
+
+    def move_to_joint_position_target(self, target_position):
+        """
+        Move to position and velocity target for drawing task. 
+        """
+        # step the simulation
+        for _ in range(5):
+            self._physics.set_control(target_position)
+            self._physics.step()
+            if self.passive_view is not None:
+                self.passive_view.sync()
+
+        return self._physics.bind(self._robot.arm_joints).qpos.copy()
 
 
 if __name__=="__main__":
