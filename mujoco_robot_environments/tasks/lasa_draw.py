@@ -207,7 +207,6 @@ class LasaDrawEnv(dm_env.Environment):
         # reset arm to home position
         # Note: for other envs we may want random sampling of initial arm positions
         self.arm.set_joint_angles(self._physics, arm_configuration)
-        print(self.arm.named_configurations["home"])
 
         # configure viewer
         if self.has_viewer:

@@ -50,11 +50,15 @@ if __name__=="__main__":
     current_joint_position = starting_joint_position
 
     # load the trained model
-    with open("flax_apply_method.bin", "rb") as f:
+    # with open("ours_method.bin", "rb") as f:
+    #     serialized_from_file = f.read()
+    # model = export.deserialize(serialized_from_file)
+    # dynamics_state = jnp.zeros((1, 5000))
+    
+    with open("feedforward_method.bin", "rb") as f:
         serialized_from_file = f.read()
     model = export.deserialize(serialized_from_file)
-    dynamics_state = jnp.zeros((1, 5000))
-    
+
     # instantiate the task
     env = LasaDrawEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
     _, _, _, obs = env.reset(current_joint_position)
@@ -98,7 +102,9 @@ if __name__=="__main__":
 
     while True:
         # make a prediction using the model
-        position_target, dynamics_state = model.call(jnp.expand_dims(current_joint_position, axis=0), dynamics_state)
+        # position_target, dynamics_state = model.call(jnp.expand_dims(current_joint_position, axis=0), dynamics_state)
+        position_target = model.call(jnp.expand_dims(current_joint_position, axis=0))
+
 
         # pass the target to position actuators
         current_joint_position = env.move_to_joint_position_target(position_target[0, :7])
