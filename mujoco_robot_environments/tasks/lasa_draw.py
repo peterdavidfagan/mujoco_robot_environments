@@ -36,7 +36,7 @@ def generate_default_config():
             config_name="rearrangement",
             overrides=[
                 "arena/props=colour_splitter",
-                "simulation_tuning_mode=False"
+                "simulation_tuning_mode=True"
                 ]
                 )
 
