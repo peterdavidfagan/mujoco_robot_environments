@@ -86,13 +86,13 @@ if __name__=="__main__":
     # interactive control of robot with mocap body
     data = {}
     for char in shapes:
+        data[f"{char}"] = {}
         demos = lasa.DataSet.__getattr__(char).demos
         pos, vel = transform_to_workspace(demos, workspace_bounds=[0.3, 0.6, -0.3, 0.3])
         for demo_idx, (positions, velocities) in enumerate(zip(pos, vel)):
+            data[f"{char}"][f"trajectory_{demo_idx}"] = {}
             print(f"Processing {char} demo {demo_idx}...")
             joint_positions, joint_velocities, joint_torques = [], [], []
-            data[f"{char}_trajectory_{demo_idx}"] = {}
-            
             for idx, (target_pos, target_vel) in enumerate(zip(positions.T, velocities.T)):
                 while True:
                     pos, vel, torque = env.move_to_draw_target(target_pos, target_vel)
@@ -120,17 +120,19 @@ if __name__=="__main__":
                             env.passive_view.sync()
 
             # env.close()
-            data[f"{char}_trajectory_{demo_idx}"]["joint_positions"] = np.vstack(joint_positions)
-            data[f"{char}_trajectory_{demo_idx}"]["joint_velocities"] = np.vstack(joint_velocities)
-            data[f"{char}_trajectory_{demo_idx}"]["joint_torques"] = np.vstack(joint_torques)
-        
-    # Save to HDF5
-    with h5py.File("robot_trajectories.h5", "w") as f:
-        for traj_name, data in data.items():
-            group = f.create_group(traj_name)
-            group.create_dataset("position", data=data["joint_positions"], compression="gzip")
-            group.create_dataset("velocity", data=data["joint_velocities"], compression="gzip")
-            group.create_dataset("torque", data=data["joint_torques"], compression="gzip")
+            data[f"{char}"][f"trajectory_{demo_idx}"]["joint_positions"] = np.vstack(joint_positions)
+            data[f"{char}"][f"trajectory_{demo_idx}"]["joint_velocities"] = np.vstack(joint_velocities)
+            data[f"{char}"][f"trajectory_{demo_idx}"]["joint_torques"] = np.vstack(joint_torques)
             
+            
+    with h5py.File("robot_trajectories.h5", "w") as f:
+        for character, trajectories in data.items():
+            char_group = f.create_group(character)  # Create a group for each character
+            for traj_id, traj_data in trajectories.items():
+                traj_group = char_group.create_group(traj_id)  # Create a group for each trajectory ID
+                traj_group.create_dataset("position", data=traj_data["joint_positions"], compression="gzip")
+                traj_group.create_dataset("velocity", data=traj_data["joint_velocities"], compression="gzip")
+                traj_group.create_dataset("torque", data=traj_data["joint_torques"], compression="gzip")
+
     env.close()
     
