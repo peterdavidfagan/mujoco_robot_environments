@@ -31,14 +31,28 @@ import h5py
 
 def generate_default_config():
     hydra.core.global_hydra.GlobalHydra.instance().clear()
-    initialize(version_base=None, config_path="../config", job_name="rearrangement")
-    return compose(
-            config_name="rearrangement",
+    with initialize(config_path="../config", job_name="lasa"):
+        cfg = compose(
+            config_name="lasa",
             overrides=[
-                "arena/props=colour_splitter",
-                "simulation_tuning_mode=True"
+                "simulation_tuning_mode=True",
                 ]
                 )
+    return cfg
+
+
+
+def generate_deployment_config():
+    hydra.core.global_hydra.GlobalHydra.instance().clear()
+    with initialize(config_path="../config", job_name="lasa"):
+        cfg = compose(
+            config_name="lasa",
+            overrides=[
+                "simulation_tuning_mode=False",
+                "robots/arm/actuator_config=position",
+                ]
+                )
+    return cfg
 
 
 class LasaDrawEnv(dm_env.Environment):
@@ -169,16 +183,16 @@ class LasaDrawEnv(dm_env.Environment):
             )
 
             # this environment uses this camera for observation specification
-            if camera.name == "overhead_camera":
-                self.overhead_camera_height = camera.height
-                self.overhead_camera_width = camera.width
+            if camera.name == "main_camera":
+                self.main_camera_height = camera.height
+                self.main_camera_width = camera.width
         
         # compile environment
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
-        self.renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
-        self.seg_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
+        self.renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
+        self.seg_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
         self.seg_renderer.enable_segmentation_rendering()
-        self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.overhead_camera_height, width=self.overhead_camera_width)
+        self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
         self.depth_renderer.enable_depth_rendering()
         self.passive_view = None
                 
@@ -246,12 +260,12 @@ class LasaDrawEnv(dm_env.Environment):
 
     def observation_spec(self) -> dm_env.specs.Array:
         """Returns the observation spec."""
-        # get shape of overhead camera
-        camera = self._arena.mjcf_model.find("camera", "overhead_camera/overhead_camera")
-        camera_shape = self.overhead_camera_height, self.overhead_camera_width, 3
+        # get shape of main camera
+        camera = self._arena.mjcf_model.find("camera", "main_camera/main_camera")
+        camera_shape = self.main_camera_height, self.main_camera_width, 3
         return {
-                "overhead_camera/depth": dm_env.specs.Array(shape=camera_shape[:-1], dtype=np.float32),
-                "overhead_camera/rgb": dm_env.specs.Array(shape=camera_shape, dtype=np.float32),
+                "main_camera/depth": dm_env.specs.Array(shape=camera_shape[:-1], dtype=np.float32),
+                "main_camera/rgb": dm_env.specs.Array(shape=camera_shape, dtype=np.float32),
                 }
 
     def action_spec(self) -> Dict[str, dm_env.specs.Array]:
@@ -264,8 +278,8 @@ class LasaDrawEnv(dm_env.Environment):
 
     def _compute_observation(self) -> np.ndarray:
         """Returns the observation."""
-        # get overhead camera
-        camera_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_CAMERA, "overhead_camera/overhead_camera")
+        # get main camera
+        camera_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_CAMERA, "main_camera/main_camera")
         self.renderer.update_scene(self._physics.data.ptr, camera_id)
         self.depth_renderer.update_scene(self._physics.data.ptr, camera_id)
         
@@ -277,8 +291,8 @@ class LasaDrawEnv(dm_env.Environment):
         
         # add to observation
         obs = {}
-        obs["overhead_camera/rgb"] = rgb
-        obs["overhead_camera/depth"] = depth
+        obs["main_camera/rgb"] = rgb
+        obs["main_camera/depth"] = depth
 
         return obs
 
@@ -349,23 +363,8 @@ class LasaDrawEnv(dm_env.Environment):
 
 
 if __name__=="__main__":
-    # clear hydra global state to avoid conflicts with other hydra instances
-    hydra.core.global_hydra.GlobalHydra.instance().clear()
-    
-    # read hydra config
-    initialize(version_base=None, config_path="../config", job_name="rearrangement")
-    
-    # add task configs
-    COLOR_SEPARATING_CONFIG = compose(
-            config_name="rearrangement",
-            overrides=[
-                "arena/props=colour_splitter",
-                "simulation_tuning_mode=True"
-                ]
-                )
-
     # instantiate color separation task
-    env = LasaDrawEnv(viewer=True, cfg=COLOR_SEPARATING_CONFIG) 
+    env = LasaDrawEnv(viewer=True) 
 
     # interactive control of robot with mocap body
     _, _, _, obs = env.reset()

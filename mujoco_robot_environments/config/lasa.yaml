@@ -1,0 +1,39 @@
+# mujoco simulation parameters
+physics_dt: 0.001
+control_dt: 0.005
+gravity: [0.0, 0.0, -9.8]
+nconmax: 1000
+njmax: 2000
+offheight: 640
+offwidth: 640
+znear: 0.0005
+viewer: False # whether or not to use passive viewer
+
+# weights and biases experiment tracking
+wandb:
+  use: True
+  experiment_name: rearrangement_transporter
+  tags: ["original transporter network"]
+  notes: "Curently debugging."
+  track_gradients: False
+  resume: False
+  resume_run:
+    id: xxxxx # not currently being used
+    load_epoch: 1
+  
+  metrics:
+    pick_loss:
+      step_metric: epoch
+      summary: min
+  
+  tables:
+    data_table:
+      columns: ["placeholder"]
+
+simulation_tuning_mode: False
+
+defaults:
+  - arena: lasa
+  - robots: franka_robotiq_2f85
+  - task: rearrangement
+  - dataset: default
