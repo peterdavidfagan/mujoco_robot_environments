@@ -89,6 +89,7 @@ class LasaDrawEnv(dm_env.Environment):
         self._arena.mjcf_model.visual.__getattr__("global").offwidth = cfg.offwidth
         self._arena.mjcf_model.visual.map.znear = cfg.znear
 
+
         # add table for manipulation task 
         table = Rectangle(
             name="table",
@@ -195,7 +196,7 @@ class LasaDrawEnv(dm_env.Environment):
         self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
         self.depth_renderer.enable_depth_rendering()
         self.passive_view = None
-                
+                        
     def close(self) -> None:
         if self.passive_view is not None:
             self.passive_view.close()
@@ -352,9 +353,16 @@ class LasaDrawEnv(dm_env.Environment):
         """
         Move to position and velocity target for drawing task. 
         """
+        scale = 0
+        # sample random force and torque to apply to arm
+        force = np.random.uniform(-scale, scale, size=3) 
+        # force = np.array([scale, 0, 0])
+        torque = np.random.uniform(-scale, scale, size=3)
+
         # step the simulation
         for _ in range(5):
             self._physics.set_control(target_position)
+            self._physics.data.xfrc_applied[12] = np.concatenate([force, torque])
             self._physics.step()
             if self.passive_view is not None:
                 self.passive_view.sync()
