@@ -37,6 +37,6 @@ simulation_tuning_mode: False
 
 defaults:
   - arena: lasa
-  - robots: franka_robotiq_2f85
+  - robots: franka_robotiq_2f85_mjx
   - task: rearrangement
   - dataset: default

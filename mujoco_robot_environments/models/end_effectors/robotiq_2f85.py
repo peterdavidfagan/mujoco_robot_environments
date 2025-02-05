@@ -15,13 +15,17 @@ class Robotiq2F85(RobotHand):
   """Robotiq 2-finger 85 adaptive gripper."""
 
   def __init__(self,
-          mjcf_path: str = ROBOTIQ_MJCF_PATH,
+          mjx: bool = False,
           actuator_config: dict = None, # for now we don't alter default actuator config
           sensor_config: dict = None,
           controller_config: dict = None,
           ):
     """Initializes the Robotiq 2-finger 85 gripper."""
-    self.mjcf_path = mjcf_path
+    if mjx:
+      self.mjcf_path = ROBOTIQ_MJX_MJCF_PATH
+    else:
+      self.mjcf_path = ROBOTIQ_MJCF_PATH
+      
     self.actuator_config = actuator_config
     self.sensor_config = sensor_config
     self.controller_config = controller_config

@@ -47,10 +47,22 @@ class FER(RobotArm):
         self._add_sensors()
         
         # define attachment and wrist sites
-        self._attachment_site = self._fer_root.find("site", "attachment_site")
+        if self._fer_root.find("site", "attachment_site") is None: # mjx model doesn't contain site            
+            eef_body = self._fer_root.find("body", "link7")
+            attachment_body = eef_body.add(
+                "body",
+                name="attachment",
+                pos=[0.0, 0.0, 0.107],
+                quat=[0.3826834, 0, 0, 0.9238795],
+            )
+            self._attachment_site = attachment_body.add(
+                "site",
+                name="attachment_site",
+            )
+        else:
+            self._attachment_site = self._fer_root.find("site", "attachment_site")
         self._wrist_site = self._attachment_site
 
-    # TODO: Refactor this
     def _add_actuators(self):
         """Override the actuator model by config."""
         # remove default actuator models from mjcf

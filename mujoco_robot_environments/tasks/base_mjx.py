@@ -43,7 +43,7 @@ def generate_default_config():
     hydra.core.global_hydra.GlobalHydra.instance().clear()
     with initialize(config_path="../config", job_name="lasa"):
         cfg = compose(
-            config_name="lasa",
+            config_name="pick_mjx",
             overrides=[
                 "simulation_tuning_mode=True",
                 ]
@@ -184,17 +184,8 @@ class BaseEnv(dm_env.Environment):
 
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
-
-        # while testing turn off mesh collision geoms so I can iterate quickly 
-        # TODO: refine franka emika panda meshes as currently not coarse enough.
-        geoms = self.arm.mjcf_model.find_all('geom')
-        for geom in geoms:
-            geom.contype = 0
-            geom.conaffinity=0
-        
-        # Comment: robotiq gripper results in an error as tendons are not supported.
-        # self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
-        # standard_compose(arm=self.arm, gripper=self.end_effector)
+        self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
+        standard_compose(arm=self.arm, gripper=self.end_effector)
         
         robot_base_site = self._arena.mjcf_model.worldbody.add(
             "site",
@@ -272,7 +263,7 @@ class BaseEnv(dm_env.Environment):
         mjx_data = mjx.make_data(self.mjx_model)
         
         # TODO: replace with randomised starting positions
-        mjx_data = mjx_data.replace(qpos=jnp.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785]))
+        mjx_data = mjx_data.replace(qpos=jnp.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785, 0, 0, 0, 0, 0, 0]))
         # mjx_data = mjx_data.replace(qvel=jnp.zeros((7,)))
 
         # step environment dynamics
@@ -366,8 +357,8 @@ if __name__=="__main__":
 
     # instantiate task environment
     env = BaseEnv() 
-    env.interactive_debug()
-    
+    # env.interactive_debug()
+
     qpos = np.zeros((3, 7))
     mjx_data = env.reset(qpos)
     # print(mjx_data.qpos.shape)
