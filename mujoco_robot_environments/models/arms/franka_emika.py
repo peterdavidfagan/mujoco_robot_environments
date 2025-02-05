@@ -8,20 +8,24 @@ from robot_descriptions import panda_mj_description
 from mujoco_controllers.models.arms.robot_arm import RobotArm
 
 PANDA_MJCF_PATH = os.path.join(panda_mj_description.PACKAGE_PATH, 'panda_nohand.xml')
+PANDA_MJX_MJCF_PATH = os.path.join(panda_mj_description.PACKAGE_PATH, 'mjx_panda_nohand.xml')
 
 class FER(RobotArm):
     """Franka Emika Panda Robot Arm."""
 
     def __init__(
         self, 
-        mjcf_path: str = PANDA_MJCF_PATH,
+        mjx: bool = False,
         actuator_config: dict = None, 
         sensor_config: dict = None, 
         controller_config: dict = None, 
         configuration_config: dict = None
         ):
         """Initialize the robot arm."""
-        self.mjcf_path = mjcf_path
+        if mjx:
+            self.mjcf_path = PANDA_MJX_MJCF_PATH
+        else:
+            self.mjcf_path = PANDA_MJCF_PATH
         self.actuator_config = actuator_config
         self.sensor_config = sensor_config
         self.controller_config = controller_config

@@ -1,13 +1,15 @@
 """Simplified Robotiq Gripper Class."""
 
+import os
 from typing import List, Tuple, Optional
 
 from dm_control import mjcf
-from robot_descriptions import robotiq_2f85_mj_description
+from robot_descriptions import robotiq_2f85_v4_mj_description
 from mujoco_controllers.models.end_effectors.robot_hand import RobotHand
 import numpy as np
 
-ROBOTIQ_MJCF_PATH = robotiq_2f85_mj_description.MJCF_PATH
+ROBOTIQ_MJCF_PATH = os.path.join(robotiq_2f85_v4_mj_description.PACKAGE_PATH, '2f85.xml')
+ROBOTIQ_MJX_MJCF_PATH = os.path.join(robotiq_2f85_v4_mj_description.PACKAGE_PATH, 'mjx_2f85.xml')
 
 class Robotiq2F85(RobotHand):
   """Robotiq 2-finger 85 adaptive gripper."""

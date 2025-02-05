@@ -1,0 +1,17 @@
+defaults: 
+  - actuator_config: motor
+  - sensor_config: position
+  - controller_config: osc
+
+
+default_configurations:
+  home: [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
+
+arm:
+  _target_: mujoco_robot_environments.models.arms.franka_emika.FER
+  mjx: True
+  actuator_config: ${robots.arm.actuator_config}
+  sensor_config: ${robots.arm.sensor_config}
+  controller_config: ${robots.arm.controller_config}
+  configuration_config: ${robots.arm.default_configurations}
+

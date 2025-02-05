@@ -1,3 +1,9 @@
 [submodule "mujoco_robot_environments/mujoco_controllers"]
 	path = mujoco_robot_environments/mujoco_controllers
 	url = git@github.com:peterdavidfagan/mujoco_controllers.git
+[submodule "mujoco_robot_environments/madrona_mjx"]
+	path = mujoco_robot_environments/local_builds/madrona_mjx
+	url = git@github.com:shacklettbp/madrona_mjx.git
+[submodule "mujoco_robot_environments/local_builds/robot_descriptions.py"]
+	path = mujoco_robot_environments/local_builds/robot_descriptions.py
+	url = git@github.com:peterdavidfagan/robot_descriptions.py.git

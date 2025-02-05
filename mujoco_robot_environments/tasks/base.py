@@ -12,9 +12,7 @@ import jax.numpy as jnp
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import dm_env
-from dm_control import composer, mjcf
-from dm_control.composer.variation import distributions
-from dm_control.composer.variation import rotations
+from dm_control import mjcf
 import hydra
 from hydra.utils import instantiate
 from hydra import compose, initialize
