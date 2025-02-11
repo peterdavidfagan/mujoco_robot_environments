@@ -190,11 +190,14 @@ class LasaDrawEnv(dm_env.Environment):
         
         # compile environment
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
-        self.renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
-        self.seg_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
-        self.seg_renderer.enable_segmentation_rendering()
-        self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
-        self.depth_renderer.enable_depth_rendering()
+        if self._cfg.renderer:
+            self.renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
+            self.seg_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
+            self.seg_renderer.enable_segmentation_rendering()
+            self.depth_renderer = mujoco.Renderer(self._physics.model.ptr, height=self.main_camera_height, width=self.main_camera_width)
+            self.depth_renderer.enable_depth_rendering()
+        else:
+            print("Renderer not requested, not rendering.")
         self.passive_view = None
                         
     def close(self) -> None:

@@ -2,7 +2,7 @@
 physics_dt: 0.001
 control_dt: 0.005
 gravity: [0.0, 0.0, -9.8]
-nconmax: 1000
+nconmax: 12
 njmax: 2000
 offheight: 640
 offwidth: 640

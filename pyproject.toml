@@ -37,8 +37,8 @@ mujoco_robot_environments = ['*.png']
 [tool.poetry.dependencies]
 python = "3.10.6"
 numpy = "^1.16.0"
-jax = {extras = ["cuda12_local"], version = "0.4.38"}
-jaxlib = {extras = ["cuda12_local"], version = "0.4.38"}
+jaxlib = ">=0.4.26"
+jax = ">=0.4.26"
 mujoco = "3.2.7"
 mujoco-mjx = "3.2.7"
 mujoco_controllers = {path="./mujoco_robot_environments/mujoco_controllers", develop=true}

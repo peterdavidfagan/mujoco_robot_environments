@@ -8,6 +8,7 @@ offheight: 640
 offwidth: 640
 znear: 0.0005
 viewer: False # whether or not to use passive viewer
+renderer: False
 
 madrona:
   use: False

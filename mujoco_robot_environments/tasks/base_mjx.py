@@ -182,6 +182,23 @@ class BaseEnv(dm_env.Environment):
         )
         self._arena.attach(table, table_attach_site)
 
+        # add cube for pick and place task
+        cube = Rectangle(
+            name="cube",
+            x_len=0.025,
+            y_len=0.025,
+            z_len=0.025,
+            rgba=(1.0, 0.0, 0.0, 1.0),
+            mass=0.1,
+            friction=(1, 1, 1),
+            solimp=(0.95, 0.995, 0.001, 0.5, 3),
+            solref=(0.01, 1.1),
+            margin = 0.15,
+            gap = 0.15,
+        )
+        frame = self._arena.add_free_entity(cube)
+        cube.set_freejoint(frame.freejoint)
+
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
         self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
@@ -212,9 +229,12 @@ class BaseEnv(dm_env.Environment):
                 self.camera_width = camera.width
         
         # compile environment
-        self._arena.mjcf_model.option.integrator = 'EULER'
-        self._arena.mjcf_model.option.cone = 'PYRAMIDAL'
+        # self._arena.mjcf_model.option.integrator = 'IMPLICITFAST'
+        # self._arena.mjcf_model.option.cone = 'PYRAMIDAL'
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
+        print(self._arena.mjcf_model.to_xml_string())
+
+        cube.set_pose(self._physics, np.array([0.4, 0.0, 0.6]), np.array([1, 0, 0, 0]))
 
         # get arm joint ids and eef site id
         self.arm_joint_ids = []
@@ -229,9 +249,6 @@ class BaseEnv(dm_env.Environment):
 
         # put model on device
         self.mjx_model = mjx.put_model(self._physics.model.ptr) 
-
-        # define renderer
-        # self.renderer = mujoco.Renderer(self._physics.model.ptr)
 
         if self._cfg.madrona.use:
             from madrona_mjx.renderer import BatchRenderer 
@@ -357,7 +374,7 @@ if __name__=="__main__":
 
     # instantiate task environment
     env = BaseEnv() 
-    # env.interactive_debug()
+    env.interactive_debug()
 
     qpos = np.zeros((3, 7))
     mjx_data = env.reset(qpos)
