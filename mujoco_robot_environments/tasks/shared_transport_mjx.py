@@ -20,6 +20,7 @@ import dm_env
 from dm_control import composer, mjcf
 from dm_control.composer.variation import distributions
 from dm_control.composer.variation import rotations
+from scipy.spatial.transform import Rotation as R
 
 import numpy as np
 import jax
@@ -174,6 +175,9 @@ class BaseEnv(dm_env.Environment):
         margin=0.0,
         gap=0.0,
         mass=10,
+        friction=(1, 0.005, 0.0001),
+        solimp=(0.95, 0.995, 0.001, 0.5, 2),
+        solref=(0.02, 1.0),
         )
         table_attach_site = self._arena.mjcf_model.worldbody.add(
             "site",
@@ -182,47 +186,156 @@ class BaseEnv(dm_env.Environment):
         )
         self._arena.attach(table, table_attach_site)
 
-        # add cube for pick and place task
-        cube = Rectangle(
+
+        # add barrier for transport task (in future make sure this can be sampled)
+        barrier_1 = Rectangle(
+            name="barrier_1",
+            x_len=0.3,
+            y_len=0.05,
+            z_len=0.25,
+            rgba=(0.5, 0.5, 0.5, 1.0),
+            mass=10.0,
+            friction=(1, 0.005, 0.0001),
+            solimp=(0.95, 0.995, 0.001, 0.5, 2),
+            solref=(0.02, 1.0),
+            margin = 0.0,
+            gap = 0.0,
+        )
+        barrier_1_attach_site = self._arena.mjcf_model.worldbody.add(
+            "site",
+            name="barrier_1_center",
+            pos=(0.15, 0.0, 0.45),
+        )
+        self._arena.attach(barrier_1, barrier_1_attach_site)
+
+        barrier_2 = Rectangle(
+            name="barrier_2",
+            x_len=0.3,
+            y_len=0.05,
+            z_len=0.25,
+            rgba=(0.5, 0.5, 0.5, 1.0),
+            mass=10.0,
+            friction=(1, 0.005, 0.0001),
+            solimp=(0.95, 0.995, 0.001, 0.5, 2),
+            solref=(0.02, 1.0),
+            margin = 0.0,
+            gap = 0.0,
+        )
+        barrier_2_attach_site = self._arena.mjcf_model.worldbody.add(
+            "site",
+            name="barrier_2_center",
+            pos=(0.15, 0.0, 1.05),
+        )
+        self._arena.attach(barrier_2, barrier_2_attach_site)
+
+        # add beam for shared transport task (in future make inertia parameters possibly sampled)
+        beam = Rectangle(
             name="cube",
-            x_len=0.025,
+            x_len=0.5,
             y_len=0.025,
             z_len=0.025,
             rgba=(1.0, 0.0, 0.0, 1.0),
-            mass=0.1,
-            friction=(1, 1, 1),
-            solimp=(0.95, 0.995, 0.001, 0.5, 3),
-            solref=(0.01, 1.1),
-            margin = 0.15,
-            gap = 0.15,
+            mass=2.0,
+            friction=(1, 0.005, 0.0001),
+            solimp=(0.95, 0.995, 0.001, 0.5, 2),
+            solref=(0.02, 1.0),
+            margin = 0.0,
+            gap = 0.0,
         )
-        frame = self._arena.add_free_entity(cube)
-        cube.set_freejoint(frame.freejoint)
+        frame = self._arena.add_free_entity(beam)
+        beam.set_freejoint(frame.freejoint)
+        beam_body = beam.mjcf_model.find("body", "prop_root")
+        beam_body.add(
+            'site',
+            name='beam_left_site',
+            pos=[-0.5, 0, 0],
+        )
+
+
+        # define a mocap for beam control target
+        self.beam_target_mocap=self._arena.mjcf_model.worldbody.add(
+                    'body',
+                    name="beam_target_mocap",
+                    mocap="true",
+                    pos=[0.75, -0.35, 0.5],
+                    quat=R.from_euler('xyz', [0, 0, 0], degrees=True).as_quat(),
+                )
+            
+        self.beam_target_mocap.add(
+            'geom',
+            name='beam_target_viz',
+            type='box',
+            size=[0.025, 0.025, 0.025],  
+            rgba=[1.0, 0.0, 0.0, 0.25],  
+            pos=[0.0, 0.0, 0.0],
+            contype=0,  # no collision with any object
+            conaffinity=0  # no influence on collision detection
+        )
+
+        # define a mocap for eef control target
+        self.eef_target_mocap=self._arena.mjcf_model.worldbody.add(
+                'body',
+                name="eef_target_mocap",
+                mocap="true",
+                pos=[-0.25, -0.35, 0.5],
+                quat=R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat(),
+            )
+            
+        self.eef_target_mocap.add(
+            'geom',
+            name='eef_target_viz',
+            type='box',
+            size=[0.025, 0.025, 0.025],  
+            rgba=[1.0, 0.0, 0.0, 0.25],  
+            pos=[0.0, 0.0, 0.0],
+            contype=0,  # no collision with any object
+            conaffinity=0  # no influence on collision detection
+            )
+
+        # define a mocap for beam goal position
+        self.beam_goal_mocap=self._arena.mjcf_model.worldbody.add(
+                    'body',
+                    name="beam_goal_mocap",
+                    mocap="true",
+                    pos=[0.25, 0.35, 0.5],
+                    quat=R.from_euler('xyz', [0, 0, 0], degrees=True).as_quat(),
+                )
+        
+        self.beam_goal_mocap.add(
+            'geom',
+            name='beam_goal_viz',
+            type='box',
+            size=[0.5, 0.025, 0.025],
+            rgba=[0.0, 1.0, 0.0, 0.25],
+            pos=[0.0, 0.0, 0.0],
+            contype=0,  # no collision with any object
+            conaffinity=0  # no influence on collision detection
+            )
 
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
-        self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
-        standard_compose(arm=self.arm, gripper=self.end_effector)
-        
+        # self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
+        # standard_compose(arm=self.arm, gripper=self.end_effector)
+
         robot_base_site = self._arena.mjcf_model.worldbody.add(
             "site",
             name="robot_base",
             pos=(-0.7, 0.0, 0.4),
         )
-        self._arena.attach(self.arm, robot_base_site)   
-        
-        # add robot model with actuators and sensors
-        self.arm_2 = instantiate(cfg.robots.arm.arm)
-        self.end_effector_2 = instantiate(cfg.robots.end_effector.end_effector)
-        standard_compose(arm=self.arm_2, gripper=self.end_effector_2)
-        
-        robot_base_site_2 = self._arena.mjcf_model.worldbody.add(
-            "site",
-            name="robot_base_2",
-            pos=(0.7, 0.0, 0.4),
-            quat=(0.0, 0.0, 0.0, 1.0),
+        self._arena.attach(self.arm, robot_base_site) 
+
+        # now try to add a weld constraint between the beam and the robot
+        equality = self._arena.mjcf_model.find_all('equality')
+        equality = self._arena.mjcf_model.equality
+        equality.add(
+            "weld",
+            name="robot_beam_weld",
+            body1="cube/prop_root",
+            body2="panda/attachment",
+            relpose=(-0.5, 0.0, -0.05, 0.0, 0.0, 0.0, 1.0),
+            # site1="cube/beam_left_site",
+            # site2="panda/attachment_site",
         )
-        self._arena.attach(self.arm_2, robot_base_site_2)   
 
         # add cameras 
         for camera in cfg.arena.cameras:
@@ -242,12 +355,19 @@ class BaseEnv(dm_env.Environment):
                 self.camera_width = camera.width
         
         # compile environment
-        # self._arena.mjcf_model.option.integrator = 'IMPLICITFAST'
-        # self._arena.mjcf_model.option.cone = 'PYRAMIDAL'
+        # print(self._arena.mjcf_model.to_xml_string())
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
-        print(self._arena.mjcf_model.to_xml_string())
 
-        cube.set_pose(self._physics, np.array([0.0, 0.0, 0.6]), np.array([1, 0, 0, 0]))
+        # print all bodies in the model
+        for i in range(self._physics.model.nbody):
+            print(mj_id2name(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_BODY, i))
+
+        # get details of the joint for shared transport
+        self.beam_joint_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_JOINT, 'cube/')
+        self.beam_body_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_BODY, 'cube/')
+        self.beam_geom_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_GEOM, 'cube/cube')
+        self.beam_site_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_SITE, 'cube/box_centre')
+        beam.set_pose(self._physics, np.array([0.25, -0.35, 0.5]), np.array([1, 0, 0, 0]))
 
         # get arm joint ids and eef site id
         self.arm_joint_ids = []
@@ -334,6 +454,26 @@ class BaseEnv(dm_env.Environment):
         # )
         # mjx_data = mjx_data.replace(ctrl=ctrl)
 
+
+        # try applying external force to the beam 
+
+        # # # Define force in (fx, fy, fz) format
+        # force = np.array([0.0, 0.0, 100.0])  # Example: 10N force along x-axis
+
+        # # Define torque in (tx, ty, tz) format
+        # torque = np.array([0.0, 0.0, 0.0])  # No torque in this example
+
+        # # Offset from the beam center (local coordinates)
+        # offset_local = np.array([0.25, 0.0, 0.0])  # 25cm along x-axis
+
+        # # Convert local offset to global coordinates if needed
+        # beam_xmat = mjx_data.site_xmat[self.beam_site_id].reshape(3, 3)  # Rotation matrix
+        # offset_global = beam_xmat @ offset_local  # Transform offset to world frame
+
+        # # Apply force with offset (force and offset cross-product to compute torque)
+        # mjx_data.xfrc_applied[self.beam_site_id, :3] = force  # Apply force
+        # mjx_data.xfrc_applied[self.beam_site_id, 3:] = np.cross(offset_global, force)  # Compute torque
+
         # step environment dynamics
         mjx_data = mjx.step(self.mjx_model, mjx_data)
 
@@ -369,7 +509,98 @@ class BaseEnv(dm_env.Environment):
         Interactively debug the environment.
         """
         passive_view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
+        joint_angles = [-2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]
+        # self.arm.set_joint_angles(self._physics, self.arm.named_configurations["home"])
+        self.arm.set_joint_angles(self._physics, joint_angles)
+        # create an instance of a robot interface for robot and controllers
+        self._robot = RobotArm(
+                arm=self.arm, 
+                gripper=None, 
+                physics=self._physics,
+                passive_viewer=passive_view,
+                )
+
         while True:
+            
+            ### apply osc control to the robot arm ###
+            target_position = np.array([0.6, 0.0, 0.7])
+            target_quat = np.array([0, 0, 0, 1])
+            
+            self._robot.arm_controller.set_target(
+                position=target_position,
+                quat=target_quat, 
+                velocity=np.zeros(3),
+                angular_velocity=np.zeros(3),
+            )
+
+            # get difference between eef site and mocap body
+            mocap_pos = self._physics.data.mocap_pos[1]
+            mocap_quat = self._physics.data.mocap_quat[1]
+
+            # update control target
+            self._robot.arm_controller.set_target(
+                position=mocap_pos + [0.0, 0.0, 0.05],
+                quat=mocap_quat, 
+                velocity=np.zeros(3),
+                angular_velocity=np.zeros(3),
+                )
+
+            arm_command = self._robot.arm_controller.compute_control_output()
+            self._physics.data.ctrl[:] = arm_command
+
+            ### prototype of the agent carrying the beam ###
+
+            # get target position from mocap 
+            target_position = self._physics.data.mocap_pos[0]
+
+            # Get COM position of the beam in world coordinates
+            com_position = self._physics.data.xpos[self.beam_body_id]  # COM position in world frame
+
+            # Get the rotation matrix of the beam
+            rotation_matrix = self._physics.data.xmat[self.beam_body_id].reshape(3, 3)  # (3x3 rotation matrix)
+
+            # Define local offset to the endpoint (in body frame)
+            beam_half_length = self._physics.model.geom_size[self.beam_geom_id][0]  # X-size is half-length
+
+            # Correct local offset (instead of assuming 0.25)
+            r_local = np.array([beam_half_length, 0.0, 0.0])  
+            r_global = rotation_matrix @ r_local
+
+            # Compute the endpoint position in world coordinates
+            endpoint_position = com_position + r_global
+
+            # Compute position error for PD control
+            position_error = target_position - endpoint_position
+
+            # Get velocity of the beam's COM and angular velocity
+            v_com = self._physics.data.qvel[self.beam_joint_id * 6 : self.beam_joint_id * 6 + 3]  # (vx, vy, vz)
+            omega = self._physics.data.qvel[self.beam_joint_id * 6 + 3 : self.beam_joint_id * 6 + 6]  # (wx, wy, wz)
+
+            # Compute velocity of the endpoint using rigid body motion
+            v_endpoint = v_com + np.cross(omega, rotation_matrix @ r_local)  
+            velocity_error = v_endpoint  # We want to slow movement
+
+            # **PD Controller Gains**
+            kp_pos = np.array([50.0, 50.0, 500.0])  # Position gains (x, y, z)
+            kd_pos = np.array([0.0, 0.0, 0.0])  # Velocity damping (x, y, z)
+
+            # Compute control force at the endpoint
+            force = (kp_pos * position_error) - (kd_pos * velocity_error)
+
+            # **Compute Correct Torque Compensation (\(\tau = r \times F\))**
+            r_global = rotation_matrix @ r_local  # Offset in world frame
+            torque = np.cross(r_global, force)
+
+            # **Clamp force and torque values to prevent instability**
+            max_force = 20
+            max_torque = 10
+            force = np.clip(force, -max_force, max_force)
+            torque = np.clip(torque, -max_torque, max_torque)
+
+            # **Apply the corrected force and torque**
+            self._physics.data.xfrc_applied[self.beam_body_id, :3] = force  # Apply force at COM
+            self._physics.data.xfrc_applied[self.beam_body_id, 3:] = torque  # Apply torque to correct for offset
+
             self._physics.step()
             passive_view.sync()
         passive_view.close()

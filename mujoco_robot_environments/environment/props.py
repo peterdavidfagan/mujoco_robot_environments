@@ -180,12 +180,12 @@ class Rectangle(Prop):
         z_len: float = 0.1,
         rgba: Tuple[float, float, float,float]=(1, 0, 0, 1),
         texture: str = "plain",
-        friction: Tuple[float, float, float]=(1, 1, 1),
+        friction: Tuple[float, float, float]=(1, 0.005, 0.0001),
         solimp: Tuple[float, float, float]=(0.95, 0.995, 0.001, 0.5, 3),
         solref: Tuple[float, float, float]=(0.01, 1.1),
         mass: float = 0.15,
-        margin: float = 0.15,
-        gap: float = 0.15,
+        margin: float = 0.0,
+        gap: float = 0.0,
     ):
         """Make a block model: the mjcf element, and site."""
         mjcf_root = mjcf.element.RootElement(model=name)
@@ -198,9 +198,9 @@ class Rectangle(Prop):
             pos=pos,
             material=Prop._make_material(texture, mjcf_root),
             size=(x_len, y_len, z_len),
-            solref=solref,
-            solimp=solimp,
-            condim=6,
+            # solref=solref,
+            # solimp=solimp,
+            condim=3,
             rgba=rgba,
             mass = mass,
             friction = friction,
