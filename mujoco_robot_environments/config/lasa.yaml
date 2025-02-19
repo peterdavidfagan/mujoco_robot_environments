@@ -1,5 +1,5 @@
 # mujoco simulation parameters
-physics_dt: 0.001
+physics_dt: 0.01
 control_dt: 0.005
 gravity: [0.0, 0.0, -9.8]
 nconmax: 1000
@@ -8,7 +8,6 @@ offheight: 640
 offwidth: 640
 znear: 0.0005
 viewer: False # whether or not to use passive viewer
-renderer: False
 
 madrona:
   use: False

@@ -157,9 +157,12 @@ class BaseEnv(dm_env.Environment):
         self._arena = empty.Arena()
 
         # set general physics parameters
-        self._arena.mjcf_model.option.timestep = cfg.physics_dt
+        self._arena.mjcf_model.option.integrator="implicitfast"
+        self._arena.mjcf_model.option.iterations = 10
+        self._arena.mjcf_model.option.ls_iterations = 10 
+        self._arena.mjcf_model.option.timestep = 0.005
         self._arena.mjcf_model.option.gravity = cfg.gravity
-        self._arena.mjcf_model.size.nconmax = cfg.nconmax
+        self._arena.mjcf_model.size.nconmax = 10
         self._arena.mjcf_model.size.njmax = cfg.njmax
         self._arena.mjcf_model.visual.__getattr__("global").offheight = cfg.offheight
         self._arena.mjcf_model.visual.__getattr__("global").offwidth = cfg.offwidth
@@ -314,8 +317,6 @@ class BaseEnv(dm_env.Environment):
 
         # add robot model with actuators and sensors
         self.arm = instantiate(cfg.robots.arm.arm)
-        # self.end_effector = instantiate(cfg.robots.end_effector.end_effector)
-        # standard_compose(arm=self.arm, gripper=self.end_effector)
 
         robot_base_site = self._arena.mjcf_model.worldbody.add(
             "site",
@@ -325,17 +326,15 @@ class BaseEnv(dm_env.Environment):
         self._arena.attach(self.arm, robot_base_site) 
 
         # now try to add a weld constraint between the beam and the robot
-        equality = self._arena.mjcf_model.find_all('equality')
-        equality = self._arena.mjcf_model.equality
-        equality.add(
-            "weld",
-            name="robot_beam_weld",
-            body1="cube/prop_root",
-            body2="panda/attachment",
-            relpose=(-0.5, 0.0, -0.05, 0.0, 0.0, 0.0, 1.0),
-            # site1="cube/beam_left_site",
-            # site2="panda/attachment_site",
-        )
+        # equality = self._arena.mjcf_model.find_all('equality')
+        # equality = self._arena.mjcf_model.equality
+        # equality.add(
+        #     "weld",
+        #     name="robot_beam_weld",
+        #     body1="cube/prop_root",
+        #     body2="panda/attachment",
+        #     relpose=(-0.5, 0.0, -0.05, 0.0, 0.0, 0.0, 1.0),
+        # )
 
         # add cameras 
         for camera in cfg.arena.cameras:
@@ -355,12 +354,7 @@ class BaseEnv(dm_env.Environment):
                 self.camera_width = camera.width
         
         # compile environment
-        # print(self._arena.mjcf_model.to_xml_string())
         self._physics = mjcf.Physics.from_mjcf_model(self._arena.mjcf_model)
-
-        # print all bodies in the model
-        for i in range(self._physics.model.nbody):
-            print(mj_id2name(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_BODY, i))
 
         # get details of the joint for shared transport
         self.beam_joint_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_JOINT, 'cube/')
@@ -404,8 +398,8 @@ class BaseEnv(dm_env.Environment):
 
     
     @partial(jax.jit, static_argnums=(0,))
-    @partial(jax.vmap, in_axes=(None, 0))
-    def reset(self, qpos) -> dm_env.TimeStep:
+    # @partial(jax.vmap, in_axes=(None, 0))
+    def reset(self) -> dm_env.TimeStep:
         """
         Resets the environment to an initial state and returns the first `TimeStep` of the new episode.
         """
@@ -413,7 +407,8 @@ class BaseEnv(dm_env.Environment):
         mjx_data = mjx.make_data(self.mjx_model)
         
         # TODO: replace with randomised starting positions
-        mjx_data = mjx_data.replace(qpos=jnp.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785, 0, 0, 0, 0, 0, 0]))
+        print(R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat())
+        mjx_data = mjx_data.replace(qpos=jnp.array([0.25, -0.35, 0.5, 0, 0, 0, -1, -2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]))
         # mjx_data = mjx_data.replace(qvel=jnp.zeros((7,)))
 
         # step environment dynamics
@@ -426,7 +421,7 @@ class BaseEnv(dm_env.Environment):
         return mjx_data
 
     @partial(jax.jit, static_argnums=(0,))
-    @partial(jax.vmap, in_axes=(None, 0, 0, 0, 0, 0))
+    # @partial(jax.vmap, in_axes=(None, 0, 0, 0, 0, 0))
     def step(
         self, 
         mjx_data, 
@@ -440,39 +435,23 @@ class BaseEnv(dm_env.Environment):
         """
         
         # set controls using operation space controller
-        # ctrl = compute_osc_control(
-        #     target_position,
-        #     target_quat, 
-        #     target_velocity, 
-        #     target_angular_velocity,
-        #     mjx_data,
-        #     self.mjx_model,
-        #     self.nullspace_config,
-        #     self.eef_site_id,
-        #     self.eef_body_id,
-        #     self.arm_joint_ids,
-        # )
+        ctrl = compute_osc_control(
+            target_position,
+            target_quat, 
+            target_velocity, 
+            target_angular_velocity,
+            mjx_data,
+            self.mjx_model,
+            self.nullspace_config,
+            self.eef_site_id,
+            self.eef_body_id,
+            self.arm_joint_ids,
+        )
+        jax.debug.print("Control Signal: {}", ctrl)
         # mjx_data = mjx_data.replace(ctrl=ctrl)
 
 
         # try applying external force to the beam 
-
-        # # # Define force in (fx, fy, fz) format
-        # force = np.array([0.0, 0.0, 100.0])  # Example: 10N force along x-axis
-
-        # # Define torque in (tx, ty, tz) format
-        # torque = np.array([0.0, 0.0, 0.0])  # No torque in this example
-
-        # # Offset from the beam center (local coordinates)
-        # offset_local = np.array([0.25, 0.0, 0.0])  # 25cm along x-axis
-
-        # # Convert local offset to global coordinates if needed
-        # beam_xmat = mjx_data.site_xmat[self.beam_site_id].reshape(3, 3)  # Rotation matrix
-        # offset_global = beam_xmat @ offset_local  # Transform offset to world frame
-
-        # # Apply force with offset (force and offset cross-product to compute torque)
-        # mjx_data.xfrc_applied[self.beam_site_id, :3] = force  # Apply force
-        # mjx_data.xfrc_applied[self.beam_site_id, 3:] = np.cross(offset_global, force)  # Compute torque
 
         # step environment dynamics
         mjx_data = mjx.step(self.mjx_model, mjx_data)
@@ -504,9 +483,37 @@ class BaseEnv(dm_env.Environment):
         """Returns the observation."""
         pass
 
+    def debug_mjx(self):
+        """
+        Visualize MJX simulated environment.
+        """
+        view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
+        target_position = jnp.asarray([-0.25, -0.35, 0.5])
+        target_quat = R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat()
+        target_velocity = jnp.zeros(3)
+        target_angular_velocity = jnp.zeros(3)
+
+        mjx_data = self.reset()
+        print("************")
+        print(mjx_data.qpos)
+        print(mjx_data.qvel)
+        while True:
+            mjx_data = env.step(
+                mjx_data, 
+                target_position,
+                target_quat,
+                target_velocity,
+                target_angular_velocity
+            )
+            print("************")
+            print(mjx_data.qpos)
+            print(mjx_data.qvel)
+            mjx.get_data_into(self._physics.data.ptr, self._physics.model.ptr, mjx_data)
+            view.sync()
+
     def interactive_debug(self):
         """
-        Interactively debug the environment.
+        Interactively debug the environment with a passive viewer.
         """
         passive_view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
         joint_angles = [-2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]
@@ -618,7 +625,9 @@ if __name__=="__main__":
 
     # instantiate task environment
     env = BaseEnv() 
-    env.interactive_debug()
+
+    env.debug_mjx()
+    # env.interactive_debug()
 
     qpos = np.zeros((3, 7))
     mjx_data = env.reset(qpos)

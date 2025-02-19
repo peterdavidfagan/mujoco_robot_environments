@@ -387,7 +387,7 @@ if __name__=="__main__":
 
     # instantiate task environment
     env = BaseEnv() 
-    env.interactive_debug()
+    # env.interactive_debug()
 
     qpos = np.zeros((3, 7))
     mjx_data = env.reset(qpos)
