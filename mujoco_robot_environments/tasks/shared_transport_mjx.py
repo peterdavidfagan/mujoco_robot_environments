@@ -1,5 +1,6 @@
 """Mujoco environment for interactive task learning."""
 import os
+import time
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 
 from abc import abstractmethod
@@ -83,7 +84,7 @@ def compute_osc_control(
     jacp, jacr = jac(
         model, 
         data, 
-        data.site_xpos[eef_site_id, :], # point
+        data.xpos[eef_body_id, :], # point
         eef_body_id, # bodyid
     )
     jacp = jacp[arm_joint_ids, :].T # filter jacobian for joints we care about
@@ -93,14 +94,13 @@ def compute_osc_control(
     # compute eef mass matrix
     mass_matrix = full_m(model, data)
     arm_mass_matrix = mass_matrix[arm_joint_ids, :][:, arm_joint_ids] # filter for links we care about
-
     mass_matrix_inv = jnp.linalg.inv(arm_mass_matrix)
     mass_matrix_inv = jnp.dot(eef_jacobian, jnp.dot(mass_matrix_inv, eef_jacobian.T))
-    eef_mass_matrix = jnp.linalg.pinv(mass_matrix_inv, rcond=1e-2) # TODO: consider switching to inv
-    
+    eef_mass_matrix = jnp.linalg.pinv(mass_matrix_inv, rtol=1e-2) # TODO: consider switching to inv
+
     # get current end-effector state variables
-    eef_position = data.xpos[eef_site_id] 
-    eef_quat = data.xquat[eef_site_id]
+    eef_position = data.xpos[eef_body_id] 
+    eef_quat = data.xquat[eef_body_id]
     eef_velocity = eef_jacobian[:3, :] @ jnp.take_along_axis(data.qvel, arm_joint_ids, axis=0)
     eef_angular_velocity = eef_jacobian[3:, :] @ jnp.take_along_axis(data.qvel, arm_joint_ids, axis=0)
 
@@ -119,25 +119,28 @@ def compute_osc_control(
     angular_velocity_error = target_angular_velocity - eef_angular_velocity
 
     # pd term for position and orientation
-    position_pd = (200.0 * position_error) + (30.0 * velocity_error)
-    orientation_pd = (500.0 * orientation_error) + (100.0 * angular_velocity_error)
+    position_pd = (300.0 * position_error) + (30.0 * velocity_error)
+    orientation_pd = (100.0 * orientation_error) + (100.0 * angular_velocity_error)
     pd_error = jnp.hstack([position_pd, orientation_pd])
 
     # compute control signal
-    nullspace_position_error = nullspace_configuration - jnp.take_along_axis(data.qpos, arm_joint_ids, axis=0)
+    nullspace_position_error = nullspace_configuration - jnp.take_along_axis(data.qpos, arm_joint_ids + 1, axis=0)
     nullspace_velocity_error = jnp.zeros((7,)) - jnp.take_along_axis(data.qvel, arm_joint_ids, axis=0)
-    nullspace_pd = (200.0 * nullspace_position_error) + (30.0 * nullspace_velocity_error)
+    nullspace_pd = (20.0 * nullspace_position_error) + (10.0 * nullspace_velocity_error)
     null_jacobian = jnp.linalg.inv(arm_mass_matrix) @ eef_jacobian.T @ eef_mass_matrix
-        
 
     tau = eef_jacobian.T @ eef_mass_matrix @ pd_error # pd control against eef target
     tau += (jnp.eye(7) - eef_jacobian.T @ null_jacobian.T) @ nullspace_pd # nullspace projection
     tau += jnp.take_along_axis(data.qfrc_bias, arm_joint_ids, axis=0) # compensate for external forces
 
-    # compute effective torque through compensating for actuator moment
-    actuator_moment_inv = jnp.linalg.pinv(data.actuator_moment)
-    actuator_moment_inv = actuator_moment_inv[arm_joint_ids, :][:, arm_joint_ids]
-    tau = tau @ actuator_moment_inv 
+    # TODO: need to update acuator moment calculation in mjx 
+    # compute effective torque through compensating for actuator moment 
+    # actuator_moment_inv = jnp.linalg.pinv(data.actuator_moment)
+    # actuator_moment_inv = actuator_moment_inv[arm_joint_ids, :][:, arm_joint_ids]
+    # tau = tau @ actuator_moment_inv 
+    # jax.debug.print("tau: {}", tau)
+
+    tau = jnp.clip(tau, -87, 87)
 
     return tau
 
@@ -366,10 +369,13 @@ class BaseEnv(dm_env.Environment):
         # get arm joint ids and eef site id
         self.arm_joint_ids = []
         for joint in self.arm.joints:
-            self.arm_joint_ids.append(mj_name2id(self._physics.model.ptr, 3, 'panda nohand/' + joint.name))
-        self.arm_joint_ids = jnp.array(self.arm_joint_ids)
-        self.eef_site_id = mj_name2id(self._physics.model.ptr, 6, 'panda nohand/attachment_site')
+            self.arm_joint_ids.append(mj_name2id(self._physics.model.ptr, 3, 'panda/' + joint.name))
+        self.arm_joint_ids = jnp.array(self.arm_joint_ids) + 5 # add 5 for now to account for free joint
+        self.eef_site_id = mj_name2id(self._physics.model.ptr, 6, 'panda/attachment_site')
         self.eef_body_id = self._physics.model.ptr.site_bodyid[self.eef_site_id]
+
+        # print all actuators parameters
+        # print(self.arm.mjcf_model.to_xml_string())
 
         # nullspace joint configuration for osc controller
         self.nullspace_config = jnp.array([0, -0.785, 0, -2.356, 0, 1.571, 0.785])
@@ -398,21 +404,29 @@ class BaseEnv(dm_env.Environment):
 
     
     @partial(jax.jit, static_argnums=(0,))
-    # @partial(jax.vmap, in_axes=(None, 0))
-    def reset(self) -> dm_env.TimeStep:
+    def reset(self, qpos=None) -> dm_env.TimeStep:
         """
         Resets the environment to an initial state and returns the first `TimeStep` of the new episode.
         """
-        # init sim data and put on device
-        mjx_data = mjx.make_data(self.mjx_model)
+        # details for resetting the environment state (for parallisation probably don't want sampling here)
+        # joint_angles = [-2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]
+        # self.arm.set_joint_angles(self._physics, joint_angles)
         
+        # init sim data and put on device
+        # mjx_data = mjx.make_data(self.mjx_model)
+        mjx_data = mjx.put_data(self._physics.model.ptr, self._physics.data.ptr)
+
         # TODO: replace with randomised starting positions
-        print(R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat())
-        mjx_data = mjx_data.replace(qpos=jnp.array([0.25, -0.35, 0.5, 0, 0, 0, -1, -2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]))
+        if qpos is not None:
+            mjx_data = mjx_data.replace(qpos=qpos)
+        else:
+            mjx_data = mjx_data.replace(qpos=jnp.asarray([0.25, -0.35, 0.5, 0, 0, 0, -1, -2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449]))
+        
         # mjx_data = mjx_data.replace(qvel=jnp.zeros((7,)))
 
         # step environment dynamics
         mjx_data = mjx.forward(self.mjx_model, mjx_data)
+        # mjx_data = mjx.put_data(self.mjx_model, mjx_data)
 
         if self._cfg.madrona.use:
             # initialise render token
@@ -421,37 +435,19 @@ class BaseEnv(dm_env.Environment):
         return mjx_data
 
     @partial(jax.jit, static_argnums=(0,))
-    # @partial(jax.vmap, in_axes=(None, 0, 0, 0, 0, 0))
     def step(
         self, 
         mjx_data, 
-        target_position, 
-        target_quat, 
-        target_velocity, 
-        target_angular_velocity, 
+        ctrl=jnp.asarray([87, 87, 87, 87, 87, 87, 87]),
         ):
         """
         Updates the environment according to the action and returns a `TimeStep`.
         """
-        
-        # set controls using operation space controller
-        ctrl = compute_osc_control(
-            target_position,
-            target_quat, 
-            target_velocity, 
-            target_angular_velocity,
-            mjx_data,
-            self.mjx_model,
-            self.nullspace_config,
-            self.eef_site_id,
-            self.eef_body_id,
-            self.arm_joint_ids,
-        )
-        jax.debug.print("Control Signal: {}", ctrl)
-        # mjx_data = mjx_data.replace(ctrl=ctrl)
 
+        # apply user inputed control                
+        mjx_data = mjx_data.replace(ctrl=ctrl)
 
-        # try applying external force to the beam 
+        # apply external force to the beam 
 
         # step environment dynamics
         mjx_data = mjx.step(self.mjx_model, mjx_data)
@@ -461,15 +457,6 @@ class BaseEnv(dm_env.Environment):
             _, rgb, _ = self.renderer.render(self.render_token, mjx_data)
 
         return mjx_data
-
-    # def render_observation(self, data):
-    #     camera_id = mj_name2id(self._physics.model.ptr, mujoco.mjtObj.mjOBJ_CAMERA, "front_camera/front_camera")
-    #     self.renderer.update_scene(data, camera_id)
-    #     pixels = self.renderer.render()
-
-    #     import matplotlib.pyplot as plt 
-    #     plt.imshow(pixels)
-    #     plt.show(block=True)
 
     def observation_spec(self) -> dm_env.specs.Array:
         """Returns the observation spec."""
@@ -488,28 +475,28 @@ class BaseEnv(dm_env.Environment):
         Visualize MJX simulated environment.
         """
         view = viewer.launch_passive(self._physics.model.ptr, self._physics.data.ptr)
-        target_position = jnp.asarray([-0.25, -0.35, 0.5])
+        target_position = jnp.asarray([0.25, 0.0, 0.8])
         target_quat = R.from_euler('xyz', [180, 180, 0], degrees=True).as_quat()
         target_velocity = jnp.zeros(3)
         target_angular_velocity = jnp.zeros(3)
 
-        mjx_data = self.reset()
-        print("************")
+        # test vmapped reset
+        input_qpos = jnp.repeat(jnp.array([0.25, -0.35, 0.5, 0, 0, 0, -1, -2.9, -0.8, 2.27, -2.09, 0.911, 2.42, -0.449])[None, :], 50, axis=0)
+        input_qpos += jax.random.uniform(key, (50, 14), minval=-0.1, maxval=0.1)
+        mjx_data = jax.vmap(self.reset)(input_qpos)
+        # mjx_data = self.reset()
         print(mjx_data.qpos)
-        print(mjx_data.qvel)
+
         while True:
-            mjx_data = env.step(
-                mjx_data, 
-                target_position,
-                target_quat,
-                target_velocity,
-                target_angular_velocity
-            )
-            print("************")
+            # mjx_data = env.step(
+            #     mjx_data, 
+            # )
+            mjx_data = jax.vmap(self.step)(mjx_data)
             print(mjx_data.qpos)
-            print(mjx_data.qvel)
-            mjx.get_data_into(self._physics.data.ptr, self._physics.model.ptr, mjx_data)
-            view.sync()
+
+            # mjx.get_data_into(self._physics.data.ptr, self._physics.model.ptr, mjx_data)
+            # view.sync()
+
 
     def interactive_debug(self):
         """
@@ -651,14 +638,10 @@ if __name__=="__main__":
         
         mjx_data = env.step(
             mjx_data, 
-            target_position, 
-            target_quat, 
-            target_velocity,
-            target_angular_velocity,
             )
         
         iter+=1
         mj_data = mjx.get_data(env._physics.model.ptr, mjx_data)
-        print(mj_data)
+        # print(mj_data)
         # if iter % 100 == 0:
         #     env.render_observation(data[0])
